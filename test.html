@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test CNG API</title>
+</head>
+<body>
+  <h1>Test Nearest CNG API</h1>
+  <button id="testBtn">Fetch Stations</button>
+  <pre id="output"></pre>
+
+  <script>
+    document.getElementById('testBtn').addEventListener('click', () => {
+      fetch('http://localhost:3000/nearest-cng', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lat: 22.61277,
+          lng: 88.34618,
+          page: 1
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+      })
+      .catch(err => {
+        document.getElementById('output').textContent = 'Error: ' + err.message;
+      });
+    });
+  </script>
+</body>
+</html>
