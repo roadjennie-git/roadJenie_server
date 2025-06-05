@@ -10,7 +10,7 @@
 
   <script>
     document.getElementById('testBtn').addEventListener('click', () => {
-      fetch('http:/https://road-jenie-server.vercel.app/nearest-cng', {
+      fetch('https://road-jenie-server.vercel.app/api/nearest-cng', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
