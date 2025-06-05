@@ -5,11 +5,11 @@ const { parse } = require('node-html-parser'); // Optional for more complex pars
 const express = require('express');
 const cors = require('cors');
 
-const serviceAccount = require('./config/serviceAccountKey.json');
+// const serviceAccount = require('./config/serviceAccountKey.json');
 
 if (!admin.apps.length) {
   admin.initializeApp({
-    credential: admin.credential.cert(require('../serviceAccountKey.json')), // replace with your Firebase service account file
+    credential: admin.credential.cert(require('./config/serviceAccountKey.json')), // replace with your Firebase service account file
   });
 }
 const db = admin.firestore();
