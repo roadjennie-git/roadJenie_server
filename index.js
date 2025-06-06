@@ -127,7 +127,6 @@ async function main() {
         place_id: station.place_id || "",
         rating: station.rating || null,
         user_ratings_total: station.user_ratings_total || null,
-        types: station.types || [],
         opening_hours: station.opening_hours?.open_now ?? null
       };
 
@@ -229,7 +228,7 @@ app.post('/nearest-cng', async (req, res) => {
     const pagedResults = withDistance.slice(startIndex, startIndex + RESULTS_PER_PAGE);
 
     res.json({
-      results: pagedResults,
+      stations: pagedResults,
       totalResults: withDistance.length,
       page,
       resultsPerPage: RESULTS_PER_PAGE,
@@ -245,3 +244,4 @@ app.post('/nearest-cng', async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
+
