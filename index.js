@@ -21,11 +21,12 @@ const serviceAccount = {
 
 if (!admin.apps.length) {
   admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
+    credential: admin.credential.cert(serviceAccount),
+    databaseURL: 'https://road-jennie-default-rtdb.firebaseio.com/'
   });
 }
 
-const db = admin.firestore();
+const db = admin.database();
 const GOOGLE_API_KEY = 'AIzaSyAkKxIEQmlMHgTxq4pd3lzJj6aTK4Zqh28'; 
 const app = express();
 app.use(cors());
@@ -33,105 +34,112 @@ app.use(express.json());
 const RESULTS_PER_PAGE = 10;
 
 
-async function test() {
-  try {
-    const snapshot = await db.collection('CNG_Stations').limit(1).get();
-    console.log('Test query succeeded:', snapshot.size);
-  } catch (err) {
-    console.error('Test query failed:', err);
-  }
-}
-
-test();
-
 // List of major Indian cities or areas
 
+///REMAINING
+const cities = [
+   "Ahmedabad", "Chennai", "Kolkata", "Pune", "Jaipur", "Surat",
+  "Lucknow", "Kanpur", "Nagpur", "Indore", "Thane", "Bhopal", "Visakhapatnam", "Patna", "Vadodara", "Ghaziabad",
+  "Ludhiana", "Agra", "Nashik", "Faridabad", "Meerut", "Rajkot", "Kalyan-Dombivli", "Vasai-Virar", "Varanasi", "Srinagar",
+  "Aurangabad", "Dhanbad", "Amritsar", "Navi Mumbai", "Prayagraj", "Ranchi", "Howrah", "Coimbatore", "Jabalpur", "Gwalior",
+  "Vijayawada", "Jodhpur", "Madurai", "Raipur", "Kota", "Guwahati", "Chandigarh", "Solapur", "Hubballi-Dharwad", "Tiruchirappalli",
+  "Bareilly", "Moradabad", "Mysore", "Tiruppur", "Gurgaon", "Noida", "Jamshedpur", "Bhavnagar", "Warangal", "Salem",
+  "Bhiwandi", "Saharanpur", "Guntur", "Bilaspur", "Udaipur", "Jalandhar", "Thiruvananthapuram", "Bokaro", "Ajmer", "Cuttack",
+  "Panipat", "Loni", "Gwalior", "Bikaner", "Dehradun", "Asansol", "Nellore", "Kollam", "Shillong", "Aligarh"
+];
+
+
+// ///UPLOADED
 // const cities = [
-//   "Delhi", "Mumbai", "Pune", "Bangalore", "Hyderabad", "Ahmedabad",
-//   "Chennai", "Kolkata", "Jaipur", "Lucknow", "Surat", "Nagpur",
-//   "Indore", "Patna", "Bhopal", "Chandigarh", "Gurgaon", "Noida"
+//    "Haridwar" ,"Mumbai", "Delhi", "Bangalore", "Hyderabad",
 // ];
 
-// // Extract city, state, pincode from formatted address
-// function extractAddressParts(address) {
-//   const parts = address.split(',').map(p => p.trim());
-//   const len = parts.length;
 
-//   return {
-//     city: len >= 3 ? parts[len - 3] : "",
-//     state: len >= 2 ? parts[len - 2].split(" ")[0] : "",
-//     pincode: len >= 2 ? parts[len - 2].match(/\d{6}/)?.[0] || "" : ""
-//   };
-// }
+// // Extract city, state, pincode from formatted address
+function extractAddressParts(address) {
+  const parts = address.split(',').map(p => p.trim());
+  const len = parts.length;
+
+  return {
+    city: len >= 3 ? parts[len - 3] : "",
+    state: len >= 2 ? parts[len - 2].split(" ")[0] : "",
+    pincode: len >= 2 ? parts[len - 2].match(/\d{6}/)?.[0] || "" : ""
+  };
+}
 
 // // Construct photo URL from photo_reference
-// function getPhotoUrl(photoRef) {
-//   return photoRef
-//     ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoRef}&key=${GOOGLE_API_KEY}`
-//     : null;
-// }
+function getPhotoUrl(photoRef) {
+  return photoRef
+    ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoRef}&key=${GOOGLE_API_KEY}`
+    : null;
+}
 
 // // Fetch CNG stations for a city using Google Places API
-// async function fetchStations(city) {
-// let results = [];
-//   let url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=cng station in ${encodeURIComponent(city)}&key=${GOOGLE_API_KEY}`;
-//   let nextPageToken = null;
+async function fetchStations(city) {
+let results = [];
+  let url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=cng station in ${encodeURIComponent(city)}&key=${GOOGLE_API_KEY}`;
+  let nextPageToken = null;
 
-//   do {
-//     const response = await axios.get(url);
-//     results = results.concat(response.data.results);
+  do {
+    const response = await axios.get(url);
+    results = results.concat(response.data.results);
 
-//     nextPageToken = response.data.next_page_token;
-//     if (nextPageToken) {
-//       // According to Google API, you must wait a short time before requesting next page
-//       await new Promise(resolve => setTimeout(resolve, 2000)); // wait 2 seconds
-//       url = `https://maps.googleapis.com/maps/api/place/textsearch/json?pagetoken=${nextPageToken}&key=${GOOGLE_API_KEY}`;
-//     }
-//   } while (nextPageToken && results.length < 50);
+    nextPageToken = response.data.next_page_token;
+    if (nextPageToken) {
+      // According to Google API, you must wait a short time before requesting next page
+      await new Promise(resolve => setTimeout(resolve, 2000)); // wait 2 seconds
+      url = `https://maps.googleapis.com/maps/api/place/textsearch/json?pagetoken=${nextPageToken}&key=${GOOGLE_API_KEY}`;
+    }
+  } while (nextPageToken && results.length < 50);
 
-//   return results.slice(0, 50); 
-// }
+  return results.slice(0, 50); 
+}
 
 // // Save a station to Firestore
-// async function saveStation(data) {
-//   const docRef = db.collection('CNG_Stations').doc(); // Auto-ID
-//   await docRef.set(data);
-// }
+async function saveStation(data) {
+  const ref = db.ref('CNG_Stations').push(); // Auto-ID
+  await ref.set(data);
+}
+
 
 // // Main function to fetch and save data
-// async function main() {
-//   for (const city of cities) {
-//     console.log(`🔍 Fetching CNG stations for ${city}...`);
-//     const results = await fetchStations(city);
+async function main() {
+  for (const city of cities) {
+    console.log(`🔍 Fetching CNG stations for ${city}...`);
+    const results = await fetchStations(city);
 
-//     for (const station of results) {
-//       const { lat, lng } = station.geometry.location;
-//       const geohash = geofire.geohashForLocation([lat, lng]);
-//       const address = station.formatted_address || "";
-//       const { city: parsedCity, state, pincode } = extractAddressParts(address);
+    for (const station of results) {
+      const { lat, lng } = station.geometry.location;
+      const geohash = geofire.geohashForLocation([lat, lng]);
+      const address = station.formatted_address || "";
+      const { city: parsedCity, state, pincode } = extractAddressParts(address);
 
-//       const stationData = {
-//         name: station.name || "",
-//         address,
-//         city: parsedCity || city,
-//         state,
-//         pincode,
-//         latitude: lat,
-//         longitude: lng,
-//         geohash,
-//         photoUrl: getPhotoUrl(station.photos?.[0]?.photo_reference || null)
-//       };
+      const stationData = {
+        name: station.name || "",
+        address,
+        city: parsedCity || city,
+        state,
+        pincode,
+        latitude: lat,
+        longitude: lng,
+        geohash,
+        photoUrl: getPhotoUrl(station.photos?.[0]?.photo_reference || null),
+        place_id: station.place_id || "",
+        rating: station.rating || null,
+        user_ratings_total: station.user_ratings_total || null,
+        types: station.types || [],
+        opening_hours: station.opening_hours?.open_now ?? null
+      };
 
-//       await saveStation(stationData);
-//       console.log(`✅ Saved: ${stationData.name} (${parsedCity}, ${state})`);
-//     }
-//   }
+      await saveStation(stationData);
+      console.log(`✅ Saved: ${stationData.name} (${parsedCity}, ${state})`);
+    }
+  }
 
-//   console.log("🎉 All stations fetched and saved.");
-// }
+  console.log("🎉 All stations fetched and saved.");
+}
 
 // main().catch(console.error);
-
 
 function validateBody(body) {
   if (
@@ -145,6 +153,53 @@ function validateBody(body) {
   return true;
 }
 
+
+///////FOR FIRESTORE
+
+// app.post('/nearest-cng', async (req, res) => {
+//   if (!validateBody(req.body)) {
+//     return res.status(400).json({ error: 'Invalid input. Provide lat, lng (numbers) and page (number >= 1).' });
+//   }
+
+//   const { lat, lng, page } = req.body;
+
+//   try {
+//     // Fetch all stations (or limit to a reasonable large number if dataset is huge)
+//     const snapshot = await db.collection('CNG_Stations').get();
+
+//     const allDocs = [];
+//     snapshot.forEach(doc => {
+//       allDocs.push({ id: doc.id, ...doc.data() });
+//     });
+
+//     // Calculate exact distance to each station
+//     const withDistance = allDocs
+//       .map(doc => {
+//         const distance = geofire.distanceBetween([lat, lng], [doc.latitude, doc.longitude]);
+//         return { ...doc, distance };
+//       })
+//       .sort((a, b) => a.distance - b.distance);
+
+//     // Pagination logic
+//     const RESULTS_PER_PAGE = 10;
+//     const startIndex = (page - 1) * RESULTS_PER_PAGE;
+//     const pagedResults = withDistance.slice(startIndex, startIndex + RESULTS_PER_PAGE);
+
+//     res.json({
+//       results: pagedResults,
+//       totalResults: withDistance.length,
+//       page,
+//       resultsPerPage: RESULTS_PER_PAGE,
+//       totalPages: Math.ceil(withDistance.length / RESULTS_PER_PAGE),
+//     });
+//   } catch (error) {
+//     console.error('Error fetching nearest stations:', error);
+//     res.status(500).json({ error: 'Internal Server Error' });
+//   }
+// });
+
+
+/////FOR FIREBASE
 app.post('/nearest-cng', async (req, res) => {
   if (!validateBody(req.body)) {
     return res.status(400).json({ error: 'Invalid input. Provide lat, lng (numbers) and page (number >= 1).' });
@@ -153,15 +208,14 @@ app.post('/nearest-cng', async (req, res) => {
   const { lat, lng, page } = req.body;
 
   try {
-    // Fetch all stations (or limit to a reasonable large number if dataset is huge)
-    const snapshot = await db.collection('CNG_Stations').get();
+    const snapshot = await db.ref('CNG_Stations').once('value');
 
     const allDocs = [];
-    snapshot.forEach(doc => {
-      allDocs.push({ id: doc.id, ...doc.data() });
+    snapshot.forEach(childSnapshot => {
+      allDocs.push({ id: childSnapshot.key, ...childSnapshot.val() });
     });
 
-    // Calculate exact distance to each station
+    // Calculate distance and sort
     const withDistance = allDocs
       .map(doc => {
         const distance = geofire.distanceBetween([lat, lng], [doc.latitude, doc.longitude]);
@@ -181,6 +235,7 @@ app.post('/nearest-cng', async (req, res) => {
       resultsPerPage: RESULTS_PER_PAGE,
       totalPages: Math.ceil(withDistance.length / RESULTS_PER_PAGE),
     });
+
   } catch (error) {
     console.error('Error fetching nearest stations:', error);
     res.status(500).json({ error: 'Internal Server Error' });
