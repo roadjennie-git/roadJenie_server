@@ -36,17 +36,17 @@ const RESULTS_PER_PAGE = 10;
 
 // List of major Indian cities or areas
 
-///REMAINING
-const cities = [
-   "Ahmedabad", "Chennai", "Kolkata", "Pune", "Jaipur", "Surat",
-  "Lucknow", "Kanpur", "Nagpur", "Indore", "Thane", "Bhopal", "Visakhapatnam", "Patna", "Vadodara", "Ghaziabad",
-  "Ludhiana", "Agra", "Nashik", "Faridabad", "Meerut", "Rajkot", "Kalyan-Dombivli", "Vasai-Virar", "Varanasi", "Srinagar",
-  "Aurangabad", "Dhanbad", "Amritsar", "Navi Mumbai", "Prayagraj", "Ranchi", "Howrah", "Coimbatore", "Jabalpur", "Gwalior",
-  "Vijayawada", "Jodhpur", "Madurai", "Raipur", "Kota", "Guwahati", "Chandigarh", "Solapur", "Hubballi-Dharwad", "Tiruchirappalli",
-  "Bareilly", "Moradabad", "Mysore", "Tiruppur", "Gurgaon", "Noida", "Jamshedpur", "Bhavnagar", "Warangal", "Salem",
-  "Bhiwandi", "Saharanpur", "Guntur", "Bilaspur", "Udaipur", "Jalandhar", "Thiruvananthapuram", "Bokaro", "Ajmer", "Cuttack",
-  "Panipat", "Loni", "Gwalior", "Bikaner", "Dehradun", "Asansol", "Nellore", "Kollam", "Shillong", "Aligarh"
-];
+// ///UPLOADED
+// const cities = [
+//    "Ahmedabad", "Chennai", "Kolkata", "Pune", "Jaipur", "Surat",
+//   "Lucknow", "Kanpur", "Nagpur", "Indore", "Thane", "Bhopal", "Visakhapatnam", "Patna", "Vadodara", "Ghaziabad",
+//   "Ludhiana", "Agra", "Nashik", "Faridabad", "Meerut", "Rajkot", "Kalyan-Dombivli", "Vasai-Virar", "Varanasi", "Srinagar",
+//   "Aurangabad", "Dhanbad", "Amritsar", "Navi Mumbai", "Prayagraj", "Ranchi", "Howrah", "Coimbatore", "Jabalpur", "Gwalior",
+//   "Vijayawada", "Jodhpur", "Madurai", "Raipur", "Kota", "Guwahati", "Chandigarh", "Solapur", "Hubballi-Dharwad", "Tiruchirappalli",
+//   "Bareilly", "Moradabad", "Mysore", "Tiruppur", "Gurgaon", "Noida", "Jamshedpur", "Bhavnagar", "Warangal", "Salem",
+//   "Bhiwandi", "Saharanpur", "Guntur", "Bilaspur", "Udaipur", "Jalandhar", "Thiruvananthapuram", "Bokaro", "Ajmer", "Cuttack",
+//   "Panipat", "Loni", "Gwalior", "Bikaner", "Dehradun", "Asansol", "Nellore", "Kollam", "Shillong", "Aligarh"
+// ];
 
 
 // ///UPLOADED
@@ -155,6 +155,7 @@ function validateBody(body) {
 
 ///////FOR FIRESTORE
 
+
 // app.post('/nearest-cng', async (req, res) => {
 //   if (!validateBody(req.body)) {
 //     return res.status(400).json({ error: 'Invalid input. Provide lat, lng (numbers) and page (number >= 1).' });
@@ -199,6 +200,7 @@ function validateBody(body) {
 
 
 /////FOR FIREBASE
+
 app.post('/nearest-cng', async (req, res) => {
   if (!validateBody(req.body)) {
     return res.status(400).json({ error: 'Invalid input. Provide lat, lng (numbers) and page (number >= 1).' });
@@ -223,7 +225,7 @@ app.post('/nearest-cng', async (req, res) => {
       .sort((a, b) => a.distance - b.distance);
 
     // Pagination logic
-    const RESULTS_PER_PAGE = 10;
+    const RESULTS_PER_PAGE = 50;
     const startIndex = (page - 1) * RESULTS_PER_PAGE;
     const pagedResults = withDistance.slice(startIndex, startIndex + RESULTS_PER_PAGE);
 
