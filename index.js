@@ -56,87 +56,87 @@ const RESULTS_PER_PAGE = 10;
 
 
 // // Extract city, state, pincode from formatted address
-function extractAddressParts(address) {
-  const parts = address.split(',').map(p => p.trim());
-  const len = parts.length;
+// function extractAddressParts(address) {
+//   const parts = address.split(',').map(p => p.trim());
+//   const len = parts.length;
 
-  return {
-    city: len >= 3 ? parts[len - 3] : "",
-    state: len >= 2 ? parts[len - 2].split(" ")[0] : "",
-    pincode: len >= 2 ? parts[len - 2].match(/\d{6}/)?.[0] || "" : ""
-  };
-}
+//   return {
+//     city: len >= 3 ? parts[len - 3] : "",
+//     state: len >= 2 ? parts[len - 2].split(" ")[0] : "",
+//     pincode: len >= 2 ? parts[len - 2].match(/\d{6}/)?.[0] || "" : ""
+//   };
+// }
 
 // // Construct photo URL from photo_reference
-function getPhotoUrl(photoRef) {
-  return photoRef
-    ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoRef}&key=${GOOGLE_API_KEY}`
-    : null;
-}
+// function getPhotoUrl(photoRef) {
+//   return photoRef
+//     ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoRef}&key=${GOOGLE_API_KEY}`
+//     : null;
+// }
 
 // // Fetch CNG stations for a city using Google Places API
-async function fetchStations(city) {
-let results = [];
-  let url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=cng station in ${encodeURIComponent(city)}&key=${GOOGLE_API_KEY}`;
-  let nextPageToken = null;
+// async function fetchStations(city) {
+// let results = [];
+//   let url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=cng station in ${encodeURIComponent(city)}&key=${GOOGLE_API_KEY}`;
+//   let nextPageToken = null;
 
-  do {
-    const response = await axios.get(url);
-    results = results.concat(response.data.results);
+//   do {
+//     const response = await axios.get(url);
+//     results = results.concat(response.data.results);
 
-    nextPageToken = response.data.next_page_token;
-    if (nextPageToken) {
-      // According to Google API, you must wait a short time before requesting next page
-      await new Promise(resolve => setTimeout(resolve, 2000)); // wait 2 seconds
-      url = `https://maps.googleapis.com/maps/api/place/textsearch/json?pagetoken=${nextPageToken}&key=${GOOGLE_API_KEY}`;
-    }
-  } while (nextPageToken && results.length < 50);
+//     nextPageToken = response.data.next_page_token;
+//     if (nextPageToken) {
+//       // According to Google API, you must wait a short time before requesting next page
+//       await new Promise(resolve => setTimeout(resolve, 2000)); // wait 2 seconds
+//       url = `https://maps.googleapis.com/maps/api/place/textsearch/json?pagetoken=${nextPageToken}&key=${GOOGLE_API_KEY}`;
+//     }
+//   } while (nextPageToken && results.length < 50);
 
-  return results.slice(0, 50); 
-}
+//   return results.slice(0, 50); 
+// }
 
 // // Save a station to Firestore
-async function saveStation(data) {
-  const ref = db.ref('CNG_Stations').push(); // Auto-ID
-  await ref.set(data);
-}
+// async function saveStation(data) {
+//   const ref = db.ref('CNG_Stations').push(); // Auto-ID
+//   await ref.set(data);
+// }
 
 
 // // Main function to fetch and save data
-async function main() {
-  for (const city of cities) {
-    console.log(`🔍 Fetching CNG stations for ${city}...`);
-    const results = await fetchStations(city);
+// async function main() {
+//   for (const city of cities) {
+//     console.log(`🔍 Fetching CNG stations for ${city}...`);
+//     const results = await fetchStations(city);
 
-    for (const station of results) {
-      const { lat, lng } = station.geometry.location;
-      const geohash = geofire.geohashForLocation([lat, lng]);
-      const address = station.formatted_address || "";
-      const { city: parsedCity, state, pincode } = extractAddressParts(address);
+//     for (const station of results) {
+//       const { lat, lng } = station.geometry.location;
+//       const geohash = geofire.geohashForLocation([lat, lng]);
+//       const address = station.formatted_address || "";
+//       const { city: parsedCity, state, pincode } = extractAddressParts(address);
 
-      const stationData = {
-        name: station.name || "",
-        address,
-        city: parsedCity || city,
-        state,
-        pincode,
-        latitude: lat,
-        longitude: lng,
-        geohash,
-        photoUrl: getPhotoUrl(station.photos?.[0]?.photo_reference || null),
-        place_id: station.place_id || "",
-        rating: station.rating || null,
-        user_ratings_total: station.user_ratings_total || null,
-        opening_hours: station.opening_hours?.open_now ?? null
-      };
+//       const stationData = {
+//         name: station.name || "",
+//         address,
+//         city: parsedCity || city,
+//         state,
+//         pincode,
+//         latitude: lat,
+//         longitude: lng,
+//         geohash,
+//         photoUrl: getPhotoUrl(station.photos?.[0]?.photo_reference || null),
+//         place_id: station.place_id || "",
+//         rating: station.rating || null,
+//         user_ratings_total: station.user_ratings_total || null,
+//         opening_hours: station.opening_hours?.open_now ?? null
+//       };
 
-      await saveStation(stationData);
-      console.log(`✅ Saved: ${stationData.name} (${parsedCity}, ${state})`);
-    }
-  }
+//       await saveStation(stationData);
+//       console.log(`✅ Saved: ${stationData.name} (${parsedCity}, ${state})`);
+//     }
+//   }
 
-  console.log("🎉 All stations fetched and saved.");
-}
+//   console.log("🎉 All stations fetched and saved.");
+// }
 
 // main().catch(console.error);
 
@@ -225,7 +225,7 @@ app.post('/nearest-cng', async (req, res) => {
       .sort((a, b) => a.distance - b.distance);
 
     // Pagination logic
-    const RESULTS_PER_PAGE = 50;
+    const RESULTS_PER_PAGE = 10;
     const startIndex = (page - 1) * RESULTS_PER_PAGE;
     const pagedResults = withDistance.slice(startIndex, startIndex + RESULTS_PER_PAGE);
 
