@@ -140,17 +140,6 @@ const RESULTS_PER_PAGE = 10;
 
 // main().catch(console.error);
 
-function validateBody(body) {
-  if (
-    typeof body.lat !== 'number' ||
-    typeof body.lng !== 'number' ||
-    typeof body.page !== 'number' ||
-    body.page < 1
-  ) {
-    return false;
-  }
-  return true;
-}
 
 
 ///////FOR FIRESTORE
@@ -201,19 +190,47 @@ function validateBody(body) {
 
 /////FOR FIREBASE
 
+// Helper function to validate the request body
+function validateBody(body) {
+  return body && 
+         typeof body.lat === 'number' && 
+         typeof body.lng === 'number' &&
+         typeof body.page === 'number' && 
+         body.page >= 1;
+}
+
 app.post('/nearest-cng', async (req, res) => {
   if (!validateBody(req.body)) {
     return res.status(400).json({ error: 'Invalid input. Provide lat, lng (numbers) and page (number >= 1).' });
   }
 
   const { lat, lng, page } = req.body;
+  const RESULTS_PER_PAGE = 50;
 
   try {
     const snapshot = await db.ref('CNG_Stations').once('value');
+    
+    // Check if snapshot exists
+    if (!snapshot.exists()) {
+      return res.json({
+        stations: [],
+        totalResults: 0,
+        page,
+        resultsPerPage: RESULTS_PER_PAGE,
+        totalPages: 0
+      });
+    }
 
     const allDocs = [];
     snapshot.forEach(childSnapshot => {
-      allDocs.push({ id: childSnapshot.key, ...childSnapshot.val() });
+      const data = childSnapshot.val();
+      // Make sure each document has required fields
+      if (data && typeof data.latitude === 'number' && typeof data.longitude === 'number') {
+        allDocs.push({ 
+          id: childSnapshot.key, 
+          ...data 
+        });
+      }
     });
 
     // Calculate distance and sort
@@ -224,26 +241,27 @@ app.post('/nearest-cng', async (req, res) => {
       })
       .sort((a, b) => a.distance - b.distance);
 
-    // Pagination logic
-    const RESULTS_PER_PAGE = 10;
+    // Pagination logic with bounds checking
     const startIndex = (page - 1) * RESULTS_PER_PAGE;
-    const pagedResults = withDistance.slice(startIndex, startIndex + RESULTS_PER_PAGE);
+    const endIndex = startIndex + RESULTS_PER_PAGE;
+    const pagedResults = withDistance.slice(startIndex, endIndex);
 
     res.json({
       stations: pagedResults,
       totalResults: withDistance.length,
-      page,
+      page: Math.min(page, Math.ceil(withDistance.length / RESULTS_PER_PAGE)),
       resultsPerPage: RESULTS_PER_PAGE,
       totalPages: Math.ceil(withDistance.length / RESULTS_PER_PAGE),
     });
 
   } catch (error) {
     console.error('Error fetching nearest stations:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ 
+      error: 'Internal Server Error',
+      details: error.message 
+    });
   }
 });
-
-
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
 
