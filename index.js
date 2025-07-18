@@ -34,25 +34,18 @@ app.use(express.json());
 const RESULTS_PER_PAGE = 10;
 
 
-// List of major Indian cities or areas
-
-// ///UPLOADED
+//UPLOADED
 // const cities = [
-//    "Ahmedabad", "Chennai", "Kolkata", "Pune", "Jaipur", "Surat",
-//   "Lucknow", "Kanpur", "Nagpur", "Indore", "Thane", "Bhopal", "Visakhapatnam", "Patna", "Vadodara", "Ghaziabad",
-//   "Ludhiana", "Agra", "Nashik", "Faridabad", "Meerut", "Rajkot", "Kalyan-Dombivli", "Vasai-Virar", "Varanasi", "Srinagar",
-//   "Aurangabad", "Dhanbad", "Amritsar", "Navi Mumbai", "Prayagraj", "Ranchi", "Howrah", "Coimbatore", "Jabalpur", "Gwalior",
+//   "Ahmedabad", "Chennai", "Kolkata", "Pune", "Jaipur", "Surat",
+//   "Lucknow", "Kanpur", "Nagpur", "Indore", "Bhopal", "Visakhapatnam", "Patna", "Vadodara", "Ghaziabad",
+//   "Ludhiana", "Agra", "Nashik", "Faridabad", "Rajkot", "Kalyan-Dombivli", "Vasai-Virar", "Varanasi", "Srinagar",
+//   "Dhanbad", "Amritsar", "Navi Mumbai", "Prayagraj", "Ranchi", "Howrah", "Coimbatore", "Jabalpur",
 //   "Vijayawada", "Jodhpur", "Madurai", "Raipur", "Kota", "Guwahati", "Chandigarh", "Solapur", "Hubballi-Dharwad", "Tiruchirappalli",
 //   "Bareilly", "Moradabad", "Mysore", "Tiruppur", "Gurgaon", "Noida", "Jamshedpur", "Bhavnagar", "Warangal", "Salem",
 //   "Bhiwandi", "Saharanpur", "Guntur", "Bilaspur", "Udaipur", "Jalandhar", "Thiruvananthapuram", "Bokaro", "Ajmer", "Cuttack",
-//   "Panipat", "Loni", "Gwalior", "Bikaner", "Dehradun", "Asansol", "Nellore", "Kollam", "Shillong", "Aligarh"
+//   "Panipat", "Loni", "Bikaner", "Asansol", "Nellore", "Kollam", "Shillong", "Aligarh"
 // ];
-
-
-// ///UPLOADED
-// const cities = [
-//    "Haridwar" ,"Mumbai", "Delhi", "Bangalore", "Hyderabad",
-// ];
+// ["Aurangabad","Bahadarabad","Balapur","Bengaluru","Bhadal","Bhainsi","Bhatramarenahalli","Bommasandra","Borivali Tarf Rahur","CENTRAL DELHI","Chilkamarri","Chintalkunta","DEHRADUN","Dehradun","Delhi","Delhi - Haridwar Rd","Haridwar","Hyderabad","Jamalpur Kalan","Jwalapur","Kamalpur Saini Bas","Kondenahalli","Krishnasagara","Kurmalguda","Meerut","Motichur Range","Mumbai","Muzaffarnagar","New Delhi","Noorpur Panjanhedi","Patancheruvu","RANGA REDDY","Rampur","Roorkee","Secunderabad","Shyampur","Sy.no.62 Himayathnagar (v Moinabad (m","Thane","Vajarahalli"]
 
 
 // // Extract city, state, pincode from formatted address
@@ -95,13 +88,6 @@ const RESULTS_PER_PAGE = 10;
 //   return results.slice(0, 50); 
 // }
 
-// // Save a station to Firestore
-// async function saveStation(data) {
-//   const ref = db.ref('CNG_Stations').push(); // Auto-ID
-//   await ref.set(data);
-// }
-
-
 // // Main function to fetch and save data
 // async function main() {
 //   for (const city of cities) {
@@ -140,57 +126,17 @@ const RESULTS_PER_PAGE = 10;
 
 // main().catch(console.error);
 
+// // Save a station to Firebase
+// async function saveStation(data) {
+//   const ref = db.ref('CNG_Stations').push(); // Auto-ID
+//   await ref.set(data);
+// }
 
 
-///////FOR FIRESTORE
 
 
-// app.post('/nearest-cng', async (req, res) => {
-//   if (!validateBody(req.body)) {
-//     return res.status(400).json({ error: 'Invalid input. Provide lat, lng (numbers) and page (number >= 1).' });
-//   }
+///USING FIREBASE
 
-//   const { lat, lng, page } = req.body;
-
-//   try {
-//     // Fetch all stations (or limit to a reasonable large number if dataset is huge)
-//     const snapshot = await db.collection('CNG_Stations').get();
-
-//     const allDocs = [];
-//     snapshot.forEach(doc => {
-//       allDocs.push({ id: doc.id, ...doc.data() });
-//     });
-
-//     // Calculate exact distance to each station
-//     const withDistance = allDocs
-//       .map(doc => {
-//         const distance = geofire.distanceBetween([lat, lng], [doc.latitude, doc.longitude]);
-//         return { ...doc, distance };
-//       })
-//       .sort((a, b) => a.distance - b.distance);
-
-//     // Pagination logic
-//     const RESULTS_PER_PAGE = 10;
-//     const startIndex = (page - 1) * RESULTS_PER_PAGE;
-//     const pagedResults = withDistance.slice(startIndex, startIndex + RESULTS_PER_PAGE);
-
-//     res.json({
-//       results: pagedResults,
-//       totalResults: withDistance.length,
-//       page,
-//       resultsPerPage: RESULTS_PER_PAGE,
-//       totalPages: Math.ceil(withDistance.length / RESULTS_PER_PAGE),
-//     });
-//   } catch (error) {
-//     console.error('Error fetching nearest stations:', error);
-//     res.status(500).json({ error: 'Internal Server Error' });
-//   }
-// });
-
-
-/////FOR FIREBASE
-
-// Helper function to validate the request body
 function validateBody(body) {
   return body && 
          typeof body.lat === 'number' && 
@@ -265,3 +211,36 @@ app.post('/nearest-cng', async (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
 
+
+async function getAllCities() {
+  try {
+    console.log("Fetching CNG stations for city list...");
+    const snapshot = await db.ref('CNG_Stations').once('value');
+
+    if (!snapshot.exists()) {
+      console.log("No stations found.");
+      return [];
+    }
+
+    const citySet = new Set();
+
+    snapshot.forEach(childSnapshot => {
+      const data = childSnapshot.val();
+      if (data && typeof data.city === 'string' && data.city.trim() !== '') {
+        citySet.add(data.city.trim());
+      }
+    });
+
+    const cityList = Array.from(citySet).sort(); // Optional sort
+    console.log("Found cities:", cityList);
+    return cityList;
+
+  } catch (error) {
+    console.error("Error fetching cities:", error);
+    return [];
+  }
+}
+app.get('/city-list', async (req, res) => {
+  const cities = await getAllCities();
+  res.json({ cities });
+});
