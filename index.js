@@ -5,6 +5,7 @@ const geofire = require('geofire-common');
 const { parse } = require('node-html-parser'); // Optional for more complex parsing
 const express = require('express');
 const cors = require('cors');
+const { decode } = require('@googlemaps/polyline-codec');
 
 const serviceAccount = {
   type: 'service_account',
@@ -210,37 +211,117 @@ app.post('/nearest-cng', async (req, res) => {
 });
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
+app.post('/cng-on-route', async (req, res) => {
+  const { routePoints, cngMileage, tankCapacity } = req.body;
 
+  if (
+    !Array.isArray(routePoints) || routePoints.length < 2 ||
+    typeof cngMileage !== 'number' || cngMileage <= 0 ||
+    typeof tankCapacity !== 'number' || tankCapacity <= 0
+  ) {
+    return res.status(400).json({
+      error: 'Invalid input. Provide routePoints (array of lat/lng), cngMileage (km/kg), and tankCapacity (kg).'
+    });
+  }
 
-async function getAllCities() {
+  const maxRange = cngMileage * tankCapacity;
+
   try {
-    console.log("Fetching CNG stations for city list...");
     const snapshot = await db.ref('CNG_Stations').once('value');
 
     if (!snapshot.exists()) {
-      console.log("No stations found.");
-      return [];
+      return res.json({
+        stations: [],
+        totalResults: 0
+      });
     }
 
-    const citySet = new Set();
-
+    const allDocs = [];
     snapshot.forEach(childSnapshot => {
       const data = childSnapshot.val();
-      if (data && typeof data.city === 'string' && data.city.trim() !== '') {
-        citySet.add(data.city.trim());
+      if (data && typeof data.latitude === 'number' && typeof data.longitude === 'number') {
+        allDocs.push({
+          id: childSnapshot.key,
+          ...data
+        });
       }
     });
 
-    const cityList = Array.from(citySet).sort(); // Optional sort
-    console.log("Found cities:", cityList);
-    return cityList;
+    const MAX_DISTANCE_FROM_ROUTE = 5; // in km
+    const onRouteStations = [];
+    let totalDistance = 0;
+
+    for (let i = 1; i < routePoints.length; i++) {
+      const prev = routePoints[i - 1];
+      const curr = routePoints[i];
+
+      const segmentDistance = geofire.distanceBetween(
+        [prev.lat, prev.lng],
+        [curr.lat, curr.lng]
+      );
+      totalDistance += segmentDistance;
+
+      // ✅ Process all segments but only include stations if within range
+      if (totalDistance <= maxRange) {
+        for (const doc of allDocs) {
+          const distance = geofire.distanceBetween(
+            [curr.lat, curr.lng],
+            [doc.latitude, doc.longitude]
+          );
+
+          if (distance <= MAX_DISTANCE_FROM_ROUTE) {
+            if (!onRouteStations.some(s => s.id === doc.id)) {
+              onRouteStations.push({
+                ...doc,
+                distance,
+                distanceFromStart: parseFloat(totalDistance.toFixed(2))
+              });
+            }
+          }
+        }
+      }
+    }
+
+    // ✅ Double-check for stations near destination point (even if skipped in loop)
+    const destination = routePoints[routePoints.length - 1];
+    const destDistanceFromStart = routePoints.reduce((sum, point, i) => {
+      if (i === 0) return 0;
+      return sum + geofire.distanceBetween(
+        [routePoints[i - 1].lat, routePoints[i - 1].lng],
+        [point.lat, point.lng]
+      );
+    }, 0);
+
+    if (destDistanceFromStart <= maxRange) {
+      for (const doc of allDocs) {
+        const distance = geofire.distanceBetween(
+          [destination.lat, destination.lng],
+          [doc.latitude, doc.longitude]
+        );
+        if (distance <= MAX_DISTANCE_FROM_ROUTE) {
+          if (!onRouteStations.some(s => s.id === doc.id)) {
+            onRouteStations.push({
+              ...doc,
+              distance,
+              distanceFromStart: parseFloat(destDistanceFromStart.toFixed(2))
+            });
+          }
+        }
+      }
+    }
+
+    onRouteStations.sort((a, b) => a.distanceFromStart - b.distanceFromStart);
+
+    res.json({
+      stations: onRouteStations,
+      totalResults: onRouteStations.length
+    });
 
   } catch (error) {
-    console.error("Error fetching cities:", error);
-    return [];
+    console.error('Error fetching on-route stations:', error);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      details: error.message
+    });
   }
-}
-app.get('/city-list', async (req, res) => {
-  const cities = await getAllCities();
-  res.json({ cities });
 });
