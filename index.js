@@ -5,6 +5,7 @@ const geofire = require('geofire-common');
 const { parse } = require('node-html-parser'); // Optional for more complex parsing
 const express = require('express');
 const cors = require('cors');
+const geolib = require('geolib');
 const { decode } = require('@googlemaps/polyline-codec');
 
 const serviceAccount = {
@@ -146,182 +147,156 @@ function validateBody(body) {
          body.page >= 1;
 }
 
-app.post('/nearest-cng', async (req, res) => {
-  if (!validateBody(req.body)) {
-    return res.status(400).json({ error: 'Invalid input. Provide lat, lng (numbers) and page (number >= 1).' });
-  }
-
-  const { lat, lng, page } = req.body;
-  const RESULTS_PER_PAGE = 50;
-
-  try {
-    const snapshot = await db.ref('CNG_Stations').once('value');
-    
-    // Check if snapshot exists
-    if (!snapshot.exists()) {
-      return res.json({
-        stations: [],
-        totalResults: 0,
-        page,
-        resultsPerPage: RESULTS_PER_PAGE,
-        totalPages: 0
-      });
+  app.post('/nearest-cng', async (req, res) => {
+    if (!validateBody(req.body)) {
+      return res.status(400).json({ error: 'Invalid input. Provide lat, lng (numbers) and page (number >= 1).' });
     }
 
-    const allDocs = [];
-    snapshot.forEach(childSnapshot => {
-      const data = childSnapshot.val();
-      // Make sure each document has required fields
-      if (data && typeof data.latitude === 'number' && typeof data.longitude === 'number') {
-        allDocs.push({ 
-          id: childSnapshot.key, 
-          ...data 
+    const { lat, lng, page } = req.body;
+    const RESULTS_PER_PAGE = 50;
+
+    try {
+      const snapshot = await db.ref('CNG_Stations').once('value');
+      
+      // Check if snapshot exists
+      if (!snapshot.exists()) {
+        return res.json({
+          stations: [],
+          totalResults: 0,
+          page,
+          resultsPerPage: RESULTS_PER_PAGE,
+          totalPages: 0
         });
       }
-    });
 
-    // Calculate distance and sort
-    const withDistance = allDocs
-      .map(doc => {
-        const distance = geofire.distanceBetween([lat, lng], [doc.latitude, doc.longitude]);
-        return { ...doc, distance };
-      })
-      .sort((a, b) => a.distance - b.distance);
+      const allDocs = [];
+      snapshot.forEach(childSnapshot => {
+        const data = childSnapshot.val();
+        // Make sure each document has required fields
+        if (data && typeof data.latitude === 'number' && typeof data.longitude === 'number') {
+          allDocs.push({ 
+            id: childSnapshot.key, 
+            ...data 
+          });
+        }
+      });
 
-    // Pagination logic with bounds checking
-    const startIndex = (page - 1) * RESULTS_PER_PAGE;
-    const endIndex = startIndex + RESULTS_PER_PAGE;
-    const pagedResults = withDistance.slice(startIndex, endIndex);
+      // Calculate distance and sort
+      const withDistance = allDocs
+        .map(doc => {
+          const distance = geofire.distanceBetween([lat, lng], [doc.latitude, doc.longitude]);
+          return { ...doc, distance };
+        })
+        .sort((a, b) => a.distance - b.distance);
 
-    res.json({
-      stations: pagedResults,
-      totalResults: withDistance.length,
-      page: Math.min(page, Math.ceil(withDistance.length / RESULTS_PER_PAGE)),
-      resultsPerPage: RESULTS_PER_PAGE,
-      totalPages: Math.ceil(withDistance.length / RESULTS_PER_PAGE),
-    });
+      // Pagination logic with bounds checking
+      const startIndex = (page - 1) * RESULTS_PER_PAGE;
+      const endIndex = startIndex + RESULTS_PER_PAGE;
+      const pagedResults = withDistance.slice(startIndex, endIndex);
 
-  } catch (error) {
-    console.error('Error fetching nearest stations:', error);
-    res.status(500).json({ 
-      error: 'Internal Server Error',
-      details: error.message 
-    });
-  }
-});
+      res.json({
+        stations: pagedResults,
+        totalResults: withDistance.length,
+        page: Math.min(page, Math.ceil(withDistance.length / RESULTS_PER_PAGE)),
+        resultsPerPage: RESULTS_PER_PAGE,
+        totalPages: Math.ceil(withDistance.length / RESULTS_PER_PAGE),
+      });
+
+    } catch (error) {
+      console.error('Error fetching nearest stations:', error);
+      res.status(500).json({ 
+        error: 'Internal Server Error',
+        details: error.message 
+      });
+    }
+  });
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
-app.post('/cng-on-route', async (req, res) => {
-  const { routePoints, cngMileage, tankCapacity } = req.body;
+
+
+app.post('/stations-along-route', async (req, res) => {
+  const { source, destination } = req.body;
 
   if (
-    !Array.isArray(routePoints) || routePoints.length < 2 ||
-    typeof cngMileage !== 'number' || cngMileage <= 0 ||
-    typeof tankCapacity !== 'number' || tankCapacity <= 0
+    !source || !destination ||
+    typeof source.lat !== 'number' || typeof source.lng !== 'number' ||
+    typeof destination.lat !== 'number' || typeof destination.lng !== 'number'
   ) {
-    return res.status(400).json({
-      error: 'Invalid input. Provide routePoints (array of lat/lng), cngMileage (km/kg), and tankCapacity (kg).'
-    });
+    return res.status(400).json({ error: 'Invalid input. Provide source and destination with lat and lng as numbers.' });
   }
 
-  const maxRange = cngMileage * tankCapacity;
-
+  const proximityKm = 5; // distance from route to consider a station "along the way"
+  
   try {
+    // 1. Get route polyline from Google Maps Directions API
+    const directionsUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${source.lat},${source.lng}&destination=${destination.lat},${destination.lng}&key=${GOOGLE_API_KEY}`;
+    const directionsResponse = await axios.get(directionsUrl);
+
+    const route = directionsResponse.data.routes[0];
+    if (!route || !route.overview_polyline) {
+      return res.status(400).json({ error: 'No route found between the given points.' });
+    }
+
+    const routePoints = decodePolyline(route.overview_polyline.points); // [{ lat, lng }]
+
+    // 2. Fetch all stations from Firebase
     const snapshot = await db.ref('CNG_Stations').once('value');
-
     if (!snapshot.exists()) {
-      return res.json({
-        stations: [],
-        totalResults: 0
-      });
+      return res.json({ stations: [] });
     }
 
-    const allDocs = [];
-    snapshot.forEach(childSnapshot => {
-      const data = childSnapshot.val();
-      if (data && typeof data.latitude === 'number' && typeof data.longitude === 'number') {
-        allDocs.push({
-          id: childSnapshot.key,
-          ...data
-        });
+    const allStations = [];
+    snapshot.forEach(child => {
+      const data = child.val();
+      if (typeof data.latitude === 'number' && typeof data.longitude === 'number') {
+        allStations.push({ id: child.key, ...data });
       }
     });
 
-    const MAX_DISTANCE_FROM_ROUTE = 5; // in km
-    const onRouteStations = [];
-    let totalDistance = 0;
-
-    for (let i = 1; i < routePoints.length; i++) {
-      const prev = routePoints[i - 1];
-      const curr = routePoints[i];
-
-      const segmentDistance = geofire.distanceBetween(
-        [prev.lat, prev.lng],
-        [curr.lat, curr.lng]
-      );
-      totalDistance += segmentDistance;
-
-      // ✅ Process all segments but only include stations if within range
-      if (totalDistance <= maxRange) {
-        for (const doc of allDocs) {
-          const distance = geofire.distanceBetween(
-            [curr.lat, curr.lng],
-            [doc.latitude, doc.longitude]
-          );
-
-          if (distance <= MAX_DISTANCE_FROM_ROUTE) {
-            if (!onRouteStations.some(s => s.id === doc.id)) {
-              onRouteStations.push({
-                ...doc,
-                distance,
-                distanceFromStart: parseFloat(totalDistance.toFixed(2))
-              });
-            }
-          }
-        }
-      }
-    }
-
-    // ✅ Double-check for stations near destination point (even if skipped in loop)
-    const destination = routePoints[routePoints.length - 1];
-    const destDistanceFromStart = routePoints.reduce((sum, point, i) => {
-      if (i === 0) return 0;
-      return sum + geofire.distanceBetween(
-        [routePoints[i - 1].lat, routePoints[i - 1].lng],
-        [point.lat, point.lng]
-      );
-    }, 0);
-
-    if (destDistanceFromStart <= maxRange) {
-      for (const doc of allDocs) {
-        const distance = geofire.distanceBetween(
-          [destination.lat, destination.lng],
-          [doc.latitude, doc.longitude]
+    // 3. Filter stations within proximity of the route
+    const stationsAlongRoute = allStations.filter(station => {
+      return routePoints.some(point => {
+        const distance = geolib.getDistance(
+          { latitude: station.latitude, longitude: station.longitude },
+          { latitude: point.lat, longitude: point.lng }
         );
-        if (distance <= MAX_DISTANCE_FROM_ROUTE) {
-          if (!onRouteStations.some(s => s.id === doc.id)) {
-            onRouteStations.push({
-              ...doc,
-              distance,
-              distanceFromStart: parseFloat(destDistanceFromStart.toFixed(2))
-            });
-          }
-        }
-      }
-    }
-
-    onRouteStations.sort((a, b) => a.distanceFromStart - b.distanceFromStart);
-
-    res.json({
-      stations: onRouteStations,
-      totalResults: onRouteStations.length
+        return distance / 1000 <= proximityKm;
+      });
     });
+
+    res.json({ stations: stationsAlongRoute });
 
   } catch (error) {
-    console.error('Error fetching on-route stations:', error);
-    res.status(500).json({
-      error: 'Internal Server Error',
-      details: error.message
-    });
+    console.error('Error finding stations along route:', error.message);
+    res.status(500).json({ error: 'Internal Server Error', details: error.message });
   }
 });
+function decodePolyline(encoded) {
+  let points = [];
+  let index = 0, lat = 0, lng = 0;
+
+  while (index < encoded.length) {
+    let b, shift = 0, result = 0;
+    do {
+      b = encoded.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    let dlat = (result & 1) ? ~(result >> 1) : (result >> 1);
+    lat += dlat;
+
+    shift = 0;
+    result = 0;
+    do {
+      b = encoded.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    let dlng = (result & 1) ? ~(result >> 1) : (result >> 1);
+    lng += dlng;
+
+    points.push({ lat: lat / 1e5, lng: lng / 1e5 });
+  }
+
+  return points;
+}
