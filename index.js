@@ -29,7 +29,7 @@ if (!admin.apps.length) {
 }
 
 const db = admin.database();
-const GOOGLE_API_KEY = 'AIzaSyAkKxIEQmlMHgTxq4pd3lzJj6aTK4Zqh28'; 
+const GOOGLE_API_KEY = 'AIzaSyA9KChURa7uBrCmyLVBilt4jYHWKjKuUUI'; 
 const app = express();
 app.use(cors());
 app.use(express.json());
