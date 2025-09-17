@@ -226,7 +226,7 @@ app.post('/stations-along-route', async (req, res) => {
   }
 
   const proximityKm = 5; // distance from route to consider a station "along the way"
-  
+
   try {
     // 1. Get route polyline from Google Maps Directions API
     const directionsUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${source.lat},${source.lng}&destination=${destination.lat},${destination.lng}&key=${GOOGLE_API_KEY}`;
@@ -254,15 +254,31 @@ app.post('/stations-along-route', async (req, res) => {
     });
 
     // 3. Filter stations within proximity of the route
-    const stationsAlongRoute = allStations.filter(station => {
-      return routePoints.some(point => {
-        const distance = geolib.getDistance(
-          { latitude: station.latitude, longitude: station.longitude },
-          { latitude: point.lat, longitude: point.lng }
-        );
-        return distance / 1000 <= proximityKm;
-      });
-    });
+    const stationsAlongRoute = allStations
+      .map(station => {
+        let minDistance = Infinity;
+        let closestIndex = -1;
+
+        routePoints.forEach((point, index) => {
+          const distance = geolib.getDistance(
+            { latitude: station.latitude, longitude: station.longitude },
+            { latitude: point.lat, longitude: point.lng }
+          );
+
+          if (distance < minDistance) {
+            minDistance = distance;
+            closestIndex = index;
+          }
+        });
+
+        if (minDistance / 1000 <= proximityKm) {
+          return { ...station, closestRouteIndex: closestIndex };
+        }
+
+        return null;
+      })
+      .filter(station => station !== null)
+      .sort((a, b) => a.closestRouteIndex - b.closestRouteIndex); // sort by route order
 
     res.json({ stations: stationsAlongRoute });
 
@@ -271,6 +287,7 @@ app.post('/stations-along-route', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error', details: error.message });
   }
 });
+
 function decodePolyline(encoded) {
   let points = [];
   let index = 0, lat = 0, lng = 0;
