@@ -13,10 +13,12 @@ const path = require("path");
 const app = express();
 
 // Serve HTML + static files
-app.use(express.static(__dirname));
+app.use(express.static("public"));
+
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
+
 
 // Enable JSON + CORS
 app.use(cors());
