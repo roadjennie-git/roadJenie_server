@@ -133,19 +133,26 @@ app.post('/stations-along-route', async (req, res) => {
     });
   }
 
-  const proximityKm = 5;
+  const proximityKm = 5;          // how far station can be from route
+  const minFromOriginKm = 5;      // minimum distance from start
+  const minBeforeDestKm = 5;      // minimum distance before destination
 
   try {
-    const directionsUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${source.lat},${source.lng}&destination=${destination.lat},${destination.lng}&key=${GOOGLE_API_KEY}`;
-    const directionsResponse = await axios.get(directionsUrl);
+    // 1️⃣ Get route from Google Directions
+    const directionsUrl =
+      `https://maps.googleapis.com/maps/api/directions/json?origin=${source.lat},${source.lng}` +
+      `&destination=${destination.lat},${destination.lng}&key=${GOOGLE_API_KEY}`;
 
+    const directionsResponse = await axios.get(directionsUrl);
     const route = directionsResponse.data.routes[0];
+
     if (!route || !route.overview_polyline) {
       return res.status(400).json({ error: 'No route found.' });
     }
 
     const routePoints = decode(route.overview_polyline.points);
 
+    // 2️⃣ Fetch all CNG stations
     const snapshot = await db.ref('CNG_Stations').once('value');
     if (!snapshot.exists()) {
       return res.json({ stations: [] });
@@ -159,6 +166,17 @@ app.post('/stations-along-route', async (req, res) => {
       }
     });
 
+    const originPoint = {
+      latitude: source.lat,
+      longitude: source.lng
+    };
+
+    const destinationPoint = {
+      latitude: destination.lat,
+      longitude: destination.lng
+    };
+
+    // 3️⃣ Filter stations along route with constraints
     const stationsAlongRoute = allStations
       .map(station => {
         let minDistance = Infinity;
@@ -176,8 +194,33 @@ app.post('/stations-along-route', async (req, res) => {
           }
         });
 
-        if (minDistance / 1000 <= proximityKm) {
-          return { ...station, closestRouteIndex: closestIndex };
+        const distanceFromOriginKm =
+          geolib.getDistance(originPoint, {
+            latitude: station.latitude,
+            longitude: station.longitude
+          }) / 1000;
+
+        const distanceToDestinationKm =
+          geolib.getDistance(destinationPoint, {
+            latitude: station.latitude,
+            longitude: station.longitude
+          }) / 1000;
+
+        // Conditions:
+        // - Near route
+        // - Not within first 5 km
+        // - Not within last 5 km
+        if (
+          minDistance / 1000 <= proximityKm &&
+          distanceFromOriginKm >= minFromOriginKm &&
+          distanceToDestinationKm >= minBeforeDestKm
+        ) {
+          return {
+            ...station,
+            closestRouteIndex: closestIndex,
+            distanceFromOriginKm: Number(distanceFromOriginKm.toFixed(2)),
+            distanceToDestinationKm: Number(distanceToDestinationKm.toFixed(2))
+          };
         }
 
         return null;
@@ -185,11 +228,18 @@ app.post('/stations-along-route', async (req, res) => {
       .filter(Boolean)
       .sort((a, b) => a.closestRouteIndex - b.closestRouteIndex);
 
-    res.json({ stations: stationsAlongRoute });
+    // 4️⃣ Response
+    res.json({
+      count: stationsAlongRoute.length,
+      stations: stationsAlongRoute
+    });
 
   } catch (error) {
     console.error('Error finding stations along route:', error.message);
-    res.status(500).json({ error: 'Internal Server Error', details: error.message });
+    res.status(500).json({
+      error: 'Internal Server Error',
+      details: error.message
+    });
   }
 });
 
