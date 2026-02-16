@@ -341,17 +341,12 @@ app.get("/car-travel-news", async (req, res) => {
     const $ = cheerio.load(data);
     const news = [];
 
-    // Inspect the actual site to find correct selectors
     $("article, .story-box, .eachStory").each((i, el) => {
       const title = $(el).find("h2, h3, .title").text().trim();
       const link = $(el).find("a").attr("href");
       const image = $(el).find("img").attr("src") || $(el).find("img").attr("data-src");
       const description = $(el).find("p, .summary").text().trim();
-      
-      // Try to extract time - adjust selector based on actual HTML
       const time = $(el).find(".time, .date, time").text().trim() || "Recently";
-      
-      // Category - you might want to set this based on the section or make it dynamic
       const cat = "Automotive";
 
       if (title && link) {
@@ -370,25 +365,14 @@ app.get("/car-travel-news", async (req, res) => {
       }
     });
 
-    if (news.length === 0) {
-      console.warn("No news articles found - selectors may need updating");
-    }
+    // Return only the JSON
+    res.json({ success: true, count: news.length, news: news });
 
-    res.json({ 
-      success: true, 
-      count: news.length, 
-      news: news 
-    });
-    
   } catch (err) {
-    console.error("Scraping error:", err.message);
-    res.status(500).json({ 
-      success: false, 
-      message: err.message,
-      news: [] 
-    });
+    res.status(500).json({ success: false, message: err.message, news: [] });
   }
 });
+
 ///
 
 /* -------------------- START SERVER -------------------- */
