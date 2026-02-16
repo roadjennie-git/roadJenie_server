@@ -9,7 +9,9 @@ const cors = require('cors');
 const geolib = require('geolib');
 const { decode } = require('@googlemaps/polyline-codec');
 const path = require("path");
-
+const multer = require('multer');
+const { getStorage } = require('firebase-admin/storage');
+const upload = multer({ storage: multer.memoryStorage() });
 // ✅ Create express app ONCE
 const app = express();
 
@@ -43,6 +45,7 @@ const serviceAccount = {
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
+    storageBucket: 'gs://road-jennie.firebasestorage.app', 
     databaseURL: 'https://road-jennie-default-rtdb.firebaseio.com/'
   });
 }
@@ -327,11 +330,11 @@ app.post('/stations-along-route', async (req, res) => {
 });
 
 
-///
+///NEWS API
 app.get("/car-travel-news", async (req, res) => {
   try {
     // const url = "https://auto.economictimes.indiatimes.com/";
-    const url = "https://auto.economictimes.indiatimes.com/news";
+    const url = "https://www.google.com/search?sca_esv=2bbc76108a4ecd6f&rlz=1C5GCEM_enIN1185IN1185&sxsrf=ANbL-n7ezxSdvZ16behOuOC4HkRcEjfYJw:1771245154056&q=automobile+news&tbm=nws&source=lnms&fbs=ADc_l-aN0CWEZBOHjofHoaMMDiKp0UJuhqwKhR0QUhF54-6jIX2xhuqmjuyJb8bmeAomNlGvrcIh4D4fHfxBBURfTfoz9NM4d8_XekjXkRztNIuwEfgeouvVtEvct4Xb5ViDaUGqunOLW7cyUaJPqaHGEhik033waife6RWg3EnXFYJkpQy71Ylwy6DO1qfCAlz_skgfErPkat2Mj57brw4X2iPwxEhcVQ&sa=X&ved=2ahUKEwio1d6xgt6SAxWHa2wGHSuZIJYQ0pQJegQIFBAB&biw=736&bih=836&dpr=2";
     
     const { data } = await axios.get(url, {
       headers: {
@@ -373,8 +376,139 @@ app.get("/car-travel-news", async (req, res) => {
     res.status(500).json({ success: false, message: err.message, news: [] });
   }
 });
-
 ///
+
+/* -------------------- API: STATIONS BY CITY -------------------- */
+
+app.get('/stations-by-city', async (req, res) => {
+  const city = req.query.city;
+
+  if (!city || typeof city !== 'string') {
+    return res.status(400).json({ 
+      success: false, 
+      error: 'Please provide a valid city name as query parameter, e.g., ?city=Delhi' 
+    });
+  }
+
+  try {
+    const snapshot = await db.ref('CNG_Stations').once('value');
+
+    if (!snapshot.exists()) {
+      return res.json({ success: true, count: 0, stations: [] });
+    }
+
+    const stations = [];
+    snapshot.forEach(child => {
+      const data = child.val();
+      // Assuming your station object has a "city" field
+      if (data.city && data.city.toLowerCase() === city.toLowerCase()) {
+        stations.push({ id: child.key, ...data });
+      }
+    });
+
+    res.json({ success: true, count: stations.length, stations });
+
+  } catch (err) {
+    console.error('Error fetching stations by city:', err.message);
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
+  }
+});
+/* -------------------- API: UPDATE STATION -------------------- */
+
+app.post('/update-station/:id', async (req, res) => {
+  const stationId = req.params.id;
+  const data = req.body;
+
+  if (!stationId) {
+    return res.status(400).json({ success: false, error: 'Station ID is required' });
+  }
+
+  if (!data || typeof data !== 'object') {
+    return res.status(400).json({ success: false, error: 'Invalid data' });
+  }
+
+  try {
+    const stationRef = db.ref(`CNG_Stations/${stationId}`);
+    const snapshot = await stationRef.once('value');
+
+    if (!snapshot.exists()) {
+      return res.status(404).json({ success: false, error: 'Station not found' });
+    }
+
+    // Update only the allowed fields
+    const updateData = {
+      name: data.name,
+      address: data.address,
+      city: data.city,
+      latitude: Number(data.latitude),
+      longitude: Number(data.longitude),
+      pincode: data.pincode,
+      rating: Number(data.rating),
+      user_ratings_total: Number(data.user_ratings_total),
+    };
+
+    await stationRef.update(updateData);
+
+    res.json({ success: true, message: 'Station updated successfully' });
+  } catch (err) {
+    console.error('Error updating station:', err.message);
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
+  }
+});
+
+// Upload image and update station
+app.post('/update-station-with-image/:id', upload.single('photo'), async (req, res) => {
+  const stationId = req.params.id;
+  const data = req.body;
+  const file = req.file; // uploaded file
+
+  if (!stationId) return res.status(400).json({ success: false, error: 'Station ID required' });
+
+  try {
+    const stationRef = db.ref(`CNG_Stations/${stationId}`);
+    const snapshot = await stationRef.once('value');
+    if (!snapshot.exists()) return res.status(404).json({ success: false, error: 'Station not found' });
+
+    let photoUrl = data.photoUrl || ''; // default to existing
+
+    // If a new image is uploaded
+    if (file) {
+      const bucket = getStorage().bucket(); // default bucket
+      const fileName = `station_photos/${stationId}_${Date.now()}_${file.originalname}`;
+      const fileRef = bucket.file(fileName);
+
+      await fileRef.save(file.buffer, {
+        contentType: file.mimetype,
+        public: true, // make it publicly accessible
+        metadata: { firebaseStorageDownloadTokens: stationId }
+      });
+
+      photoUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+    }
+
+    // Update station with all fields + photoUrl
+    const updateData = {
+      name: data.name,
+      address: data.address,
+      city: data.city,
+      latitude: Number(data.latitude),
+      longitude: Number(data.longitude),
+      pincode: data.pincode,
+      rating: Number(data.rating),
+      user_ratings_total: Number(data.user_ratings_total),
+      photoUrl
+    };
+
+    await stationRef.update(updateData);
+
+    res.json({ success: true, message: 'Station updated successfully', photoUrl });
+
+  } catch (err) {
+    console.error('Error updating station:', err);
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
+  }
+});
+
 
 /* -------------------- START SERVER -------------------- */
 
