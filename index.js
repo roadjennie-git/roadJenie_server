@@ -123,6 +123,7 @@ app.post('/nearest-cng', async (req, res) => {
 app.post('/stations-along-route', async (req, res) => {
   const { source, destination } = req.body;
 
+  console.log('\n========== NEW REQUEST ==========');
   console.log('Received /stations-along-route request');
   console.log('Source:', source);
   console.log('Destination:', destination);
@@ -138,14 +139,18 @@ app.post('/stations-along-route', async (req, res) => {
     });
   }
 
-  const proximityKm = 5;
+  const proximityKm = 5; // Distance from route
+  const minDistanceFromSource = 5; // Minimum 5km from source
+  const minDistanceFromDestination = 5; // Minimum 5km from destination (i.e., 5km before end)
 
   try {
     // 1️⃣ Get route from Google Directions
     const directionsUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${source.lat},${source.lng}&destination=${destination.lat},${destination.lng}&key=${GOOGLE_API_KEY}`;
-    console.log('Calling Google Directions API:', directionsUrl);
+    console.log('\n--- GOOGLE DIRECTIONS API ---');
 
     const directionsResponse = await axios.get(directionsUrl);
+    console.log('API Status:', directionsResponse.data.status);
+    
     const route = directionsResponse.data.routes?.[0];
 
     if (!route || !route.overview_polyline) {
@@ -153,13 +158,31 @@ app.post('/stations-along-route', async (req, res) => {
       return res.status(400).json({ error: 'No route found.' });
     }
 
-    const routePoints = decode(route.overview_polyline.points);
-    console.log(`Route decoded. Number of points: ${routePoints.length}`);
+    const decodedPoints = decode(route.overview_polyline.points);
+    console.log(`✓ Route decoded. Number of points: ${decodedPoints.length}`);
+    
+    // Convert to consistent format
+    const routePoints = decodedPoints.map(point => {
+      if (Array.isArray(point)) {
+        return { lat: point[0], lng: point[1] };
+      }
+      if (point.lat !== undefined && point.lng !== undefined) {
+        return { lat: point.lat, lng: point.lng };
+      }
+      if (point.latitude !== undefined && point.longitude !== undefined) {
+        return { lat: point.latitude, lng: point.longitude };
+      }
+      return null;
+    }).filter(Boolean);
 
-    // 2️⃣ Fetch all CNG stations safely
+    console.log(`✓ Converted route points: ${routePoints.length}`);
+    console.log('First 3 converted points:', routePoints.slice(0, 3));
+
+    // 2️⃣ Fetch all CNG stations
+    console.log('\n--- FETCHING STATIONS FROM FIREBASE ---');
     const snapshot = await db.ref('CNG_Stations').once('value');
     if (!snapshot.exists()) {
-      console.log('No stations found in database.');
+      console.log('❌ No stations found in database.');
       return res.json({ stations: [] });
     }
 
@@ -172,48 +195,101 @@ app.post('/stations-along-route', async (req, res) => {
       if (!isNaN(lat) && !isNaN(lng)) {
         allStations.push({ id: child.key, latitude: lat, longitude: lng, ...data });
       } else {
-        console.warn(`Skipping station with invalid coordinates: ${child.key}`, data);
+        console.warn(`⚠️ Skipping station with invalid coordinates: ${child.key}`);
       }
     });
 
-    console.log(`Total stations fetched: ${allStations.length}`);
+    console.log(`✓ Total valid stations fetched: ${allStations.length}`);
 
-    // 3️⃣ Filter stations along route safely
+    // 3️⃣ Filter stations along route with restrictions
+    console.log(`\n--- FILTERING STATIONS ---`);
+    console.log(`Proximity to route: ≤${proximityKm} km`);
+    console.log(`Min distance from source: ≥${minDistanceFromSource} km`);
+    console.log(`Min distance from destination: ≥${minDistanceFromDestination} km (stop 5km before end)`);
+    
     const stationsAlongRoute = allStations
-      .map(station => {
+      .map((station, idx) => {
         if (
           station.latitude == null ||
           station.longitude == null ||
           isNaN(station.latitude) ||
           isNaN(station.longitude)
         ) {
-          console.warn('Skipping invalid station during map:', station.id);
           return null;
         }
 
+        // Calculate distance from source
+        const distanceFromSource = geolib.getDistance(
+          { latitude: source.lat, longitude: source.lng },
+          { latitude: station.latitude, longitude: station.longitude }
+        ) / 1000; // Convert to km
+
+        // Calculate distance from destination
+        const distanceFromDestination = geolib.getDistance(
+          { latitude: destination.lat, longitude: destination.lng },
+          { latitude: station.latitude, longitude: station.longitude }
+        ) / 1000; // Convert to km
+
+        // Find minimum distance to route
         let minDistance = Infinity;
         let closestIndex = -1;
 
         routePoints.forEach((point, index) => {
-          if (point?.lat == null || point?.lng == null) return; // skip invalid points
+          if (!point || point.lat == null || point.lng == null) return;
 
-          const distance = geolib.getDistance(
-            { latitude: station.latitude, longitude: station.longitude },
-            { latitude: point.lat, longitude: point.lng }
-          );
+          try {
+            const distance = geolib.getDistance(
+              { latitude: station.latitude, longitude: station.longitude },
+              { latitude: point.lat, longitude: point.lng }
+            );
 
-          if (distance < minDistance) {
-            minDistance = distance;
-            closestIndex = index;
+            if (distance < minDistance) {
+              minDistance = distance;
+              closestIndex = index;
+            }
+          } catch (err) {
+            console.error(`Error calculating distance for station ${station.id}:`, err.message);
           }
         });
 
-        if (minDistance / 1000 <= proximityKm) {
+        const distanceFromRouteKm = minDistance / 1000;
+
+        // Log first 5 stations for debugging
+        if (idx < 5) {
+          console.log(`\nStation ${idx + 1}: ${station.name || station.id}`);
+          console.log(`  Distance from route: ${distanceFromRouteKm.toFixed(2)} km`);
+          console.log(`  Distance from source: ${distanceFromSource.toFixed(2)} km`);
+          console.log(`  Distance from destination: ${distanceFromDestination.toFixed(2)} km`);
+        }
+
+        // Apply all three filters
+        if (distanceFromRouteKm <= proximityKm &&
+            distanceFromSource >= minDistanceFromSource &&
+            distanceFromDestination >= minDistanceFromDestination) {
+          
+          console.log(`  ✓ Station ${station.id} INCLUDED`);
+          console.log(`     - ${distanceFromRouteKm.toFixed(2)} km from route`);
+          console.log(`     - ${distanceFromSource.toFixed(2)} km from source`);
+          console.log(`     - ${distanceFromDestination.toFixed(2)} km from destination`);
+          
           return {
             ...station,
             closestRouteIndex: closestIndex,
-            distanceKm: Number((minDistance / 1000).toFixed(2))
+            distanceKm: Number(distanceFromRouteKm.toFixed(2)),
+            distanceFromSourceKm: Number(distanceFromSource.toFixed(2)),
+            distanceFromDestinationKm: Number(distanceFromDestination.toFixed(2))
           };
+        }
+
+        // Log why station was excluded (for first 10 stations only)
+        if (idx < 10) {
+          if (distanceFromRouteKm > proximityKm) {
+            console.log(`  ✗ Excluded: Too far from route (${distanceFromRouteKm.toFixed(2)} km)`);
+          } else if (distanceFromSource < minDistanceFromSource) {
+            console.log(`  ✗ Excluded: Too close to source (${distanceFromSource.toFixed(2)} km < ${minDistanceFromSource} km)`);
+          } else if (distanceFromDestination < minDistanceFromDestination) {
+            console.log(`  ✗ Excluded: Too close to destination (${distanceFromDestination.toFixed(2)} km < ${minDistanceFromDestination} km)`);
+          }
         }
 
         return null;
@@ -221,15 +297,33 @@ app.post('/stations-along-route', async (req, res) => {
       .filter(Boolean)
       .sort((a, b) => a.closestRouteIndex - b.closestRouteIndex);
 
-    console.log(`Stations along route: ${stationsAlongRoute.length}`);
+    console.log(`\n========== RESULTS ==========`);
+    console.log(`Total stations checked: ${allStations.length}`);
+    console.log(`Stations matching all criteria: ${stationsAlongRoute.length}`);
+    console.log(`Criteria:`);
+    console.log(`  - Within ${proximityKm}km of route`);
+    console.log(`  - At least ${minDistanceFromSource}km from source`);
+    console.log(`  - At least ${minDistanceFromDestination}km from destination`);
+    
+    if (stationsAlongRoute.length > 0) {
+      console.log('\nStations found along route:');
+      stationsAlongRoute.forEach((s, i) => {
+        console.log(`  ${i + 1}. ${s.name || s.id}`);
+        console.log(`     Route: ${s.distanceKm} km | Source: ${s.distanceFromSourceKm} km | Dest: ${s.distanceFromDestinationKm} km`);
+      });
+    } else {
+      console.log('\n❌ NO STATIONS FOUND matching all criteria');
+    }
+    console.log('================================\n');
+
     res.json({ stations: stationsAlongRoute });
 
   } catch (error) {
-    console.error('Error finding stations along route:', error);
+    console.error('\n❌ ERROR:', error.message);
+    console.error('Stack:', error.stack);
     res.status(500).json({ error: 'Internal Server Error', details: error.message });
   }
 });
-
 
 /* -------------------- START SERVER -------------------- */
 
