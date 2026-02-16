@@ -4,6 +4,7 @@ const admin = require('firebase-admin');
 const geofire = require('geofire-common');
 const { parse } = require('node-html-parser');
 const express = require('express');
+const cheerio = require("cheerio");
 const cors = require('cors');
 const geolib = require('geolib');
 const { decode } = require('@googlemaps/polyline-codec');
@@ -324,6 +325,50 @@ app.post('/stations-along-route', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error', details: error.message });
   }
 });
+
+
+///
+app.get("/car-travel-news", async (req, res) => {
+  try {
+    const url = "https://auto.economictimes.indiatimes.com/";
+    const { data } = await axios.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
+    });
+    
+    const $ = cheerio.load(data);
+    const news = [];
+
+    // Updated selectors for Economic Times Auto
+    // You need to inspect the actual site to find the right selectors
+    $("article, .story-box, .eachStory").each((i, el) => {
+      const title = $(el).find("h2, h3, .title").text().trim();
+      const link = $(el).find("a").attr("href");
+      const image = $(el).find("img").attr("src") || $(el).find("img").attr("data-src");
+      const description = $(el).find("p, .summary").text().trim();
+
+      if (title && link) {
+        news.push({
+          title,
+          link: link.startsWith("http") ? link : `https://auto.economictimes.indiatimes.com${link}`,
+          image: image && !image.startsWith("http") ? `https://auto.economictimes.indiatimes.com${image}` : image,
+          description,
+        });
+      }
+    });
+
+    if (news.length === 0) {
+      console.warn("No news articles found - selectors may need updating");
+    }
+
+    res.json({ success: true, count: news.length, news });
+  } catch (err) {
+    console.error("Scraping error:", err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+///
 
 /* -------------------- START SERVER -------------------- */
 
