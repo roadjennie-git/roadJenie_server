@@ -330,7 +330,8 @@ app.post('/stations-along-route', async (req, res) => {
 ///
 app.get("/car-travel-news", async (req, res) => {
   try {
-    const url = "https://auto.economictimes.indiatimes.com/";
+    // const url = "https://auto.economictimes.indiatimes.com/";
+    const url = "https://auto.economictimes.indiatimes.com/news";
     
     const { data } = await axios.get(url, {
       headers: {
@@ -353,12 +354,12 @@ app.get("/car-travel-news", async (req, res) => {
         news.push({
           title: title,
           imagelink: image && !image.startsWith("http") 
-            ? `https://auto.economictimes.indiatimes.com${image}` 
+            ? `${url}${image}`  
             : (image || ""),
           desc: description || "",
           newslink: link.startsWith("http") 
             ? link 
-            : `https://auto.economictimes.indiatimes.com${link}`,
+            : `${url}${link}`,
           time: time,
           cat: cat
         });
