@@ -331,6 +331,7 @@ app.post('/stations-along-route', async (req, res) => {
 app.get("/car-travel-news", async (req, res) => {
   try {
     const url = "https://auto.economictimes.indiatimes.com/";
+    
     const { data } = await axios.get(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
@@ -340,20 +341,31 @@ app.get("/car-travel-news", async (req, res) => {
     const $ = cheerio.load(data);
     const news = [];
 
-    // Updated selectors for Economic Times Auto
-    // You need to inspect the actual site to find the right selectors
+    // Inspect the actual site to find correct selectors
     $("article, .story-box, .eachStory").each((i, el) => {
       const title = $(el).find("h2, h3, .title").text().trim();
       const link = $(el).find("a").attr("href");
       const image = $(el).find("img").attr("src") || $(el).find("img").attr("data-src");
       const description = $(el).find("p, .summary").text().trim();
+      
+      // Try to extract time - adjust selector based on actual HTML
+      const time = $(el).find(".time, .date, time").text().trim() || "Recently";
+      
+      // Category - you might want to set this based on the section or make it dynamic
+      const cat = "Automotive";
 
       if (title && link) {
         news.push({
-          title,
-          link: link.startsWith("http") ? link : `https://auto.economictimes.indiatimes.com${link}`,
-          image: image && !image.startsWith("http") ? `https://auto.economictimes.indiatimes.com${image}` : image,
-          description,
+          title: title,
+          imagelink: image && !image.startsWith("http") 
+            ? `https://auto.economictimes.indiatimes.com${image}` 
+            : (image || ""),
+          desc: description || "",
+          newslink: link.startsWith("http") 
+            ? link 
+            : `https://auto.economictimes.indiatimes.com${link}`,
+          time: time,
+          cat: cat
         });
       }
     });
@@ -362,10 +374,19 @@ app.get("/car-travel-news", async (req, res) => {
       console.warn("No news articles found - selectors may need updating");
     }
 
-    res.json({ success: true, count: news.length, news });
+    res.json({ 
+      success: true, 
+      count: news.length, 
+      news: news 
+    });
+    
   } catch (err) {
     console.error("Scraping error:", err.message);
-    res.status(500).json({ success: false, message: err.message });
+    res.status(500).json({ 
+      success: false, 
+      message: err.message,
+      news: [] 
+    });
   }
 });
 ///
