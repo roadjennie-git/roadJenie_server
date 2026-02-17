@@ -337,8 +337,8 @@ app.post('/stations-along-route', async (req, res) => {
 ///NEWS API
 app.get("/car-travel-news", async (req, res) => {
   try {
-    // const url = "https://auto.economictimes.indiatimes.com/";
-    const url = "https://www.google.com/search?sca_esv=2bbc76108a4ecd6f&rlz=1C5GCEM_enIN1185IN1185&sxsrf=ANbL-n7ezxSdvZ16behOuOC4HkRcEjfYJw:1771245154056&q=automobile+news&tbm=nws&source=lnms&fbs=ADc_l-aN0CWEZBOHjofHoaMMDiKp0UJuhqwKhR0QUhF54-6jIX2xhuqmjuyJb8bmeAomNlGvrcIh4D4fHfxBBURfTfoz9NM4d8_XekjXkRztNIuwEfgeouvVtEvct4Xb5ViDaUGqunOLW7cyUaJPqaHGEhik033waife6RWg3EnXFYJkpQy71Ylwy6DO1qfCAlz_skgfErPkat2Mj57brw4X2iPwxEhcVQ&sa=X&ved=2ahUKEwio1d6xgt6SAxWHa2wGHSuZIJYQ0pQJegQIFBAB&biw=736&bih=836&dpr=2";
+    const url = "https://auto.economictimes.indiatimes.com/";
+    // const url = "https://www.drivespark.com/";
     
     const { data } = await axios.get(url, {
       headers: {
