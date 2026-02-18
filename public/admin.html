@@ -2,133 +2,1050 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard - CNG Stations</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>CNG Stations Admin Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5; }
-    h1 { text-align: center; }
-    table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-top: 20px; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-    th { background-color: #4CAF50; color: white; }
-    tr:nth-child(even){background-color: #f2f2f2;}
-    input[type="text"], input[type="number"], input[type="url"], input[type="file"] { width: 100%; padding: 4px; box-sizing: border-box; }
-    button { padding: 6px 12px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
-    button:hover { background-color: #45a049; }
-    .img-preview { width: 80px; height: auto; display: block; margin: auto; }
+    :root {
+      --primary: #10b981;
+      --primary-dark: #059669;
+      --primary-light: #d1fae5;
+      --danger: #ef4444;
+      --danger-light: #fee2e2;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      padding: 0;
+    }
+
+    /* Header */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .header-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: var(--text);
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.25rem;
+    }
+
+    /* Search Bar */
+    .search-container {
+      flex: 1;
+      max-width: 500px;
+      position: relative;
+    }
+
+    .search-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      transition: all 0.2s ease;
+    }
+
+    .search-wrapper:focus-within {
+      border-color: var(--primary);
+      background: var(--surface);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .search-icon {
+      padding: 0 16px;
+      color: var(--text-muted);
+    }
+
+    #cityInput {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 14px 0;
+      font-size: 1rem;
+      outline: none;
+      color: var(--text);
+    }
+
+    #cityInput::placeholder {
+      color: var(--text-muted);
+    }
+
+    .load-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    }
+
+    .load-btn:hover {
+      background: var(--primary-dark);
+    }
+
+    .load-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* Main Container */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* Stats Bar */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      padding: 20px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    .stat-icon.blue { background: #dbeafe; color: #2563eb; }
+    .stat-icon.green { background: var(--primary-light); color: var(--primary-dark); }
+    .stat-icon.orange { background: #ffedd5; color: #ea580c; }
+
+    .stat-info h3 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .stat-info p {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    /* Mobile Cards View */
+    .mobile-view {
+      display: none;
+      gap: 16px;
+    }
+
+    .station-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .station-card:active {
+      transform: scale(0.99);
+    }
+
+    .card-header {
+      padding: 16px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      position: relative;
+    }
+
+    .card-id {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: rgba(255,255,255,0.2);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .card-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+      padding-right: 80px;
+    }
+
+    .card-city {
+      opacity: 0.9;
+      font-size: 0.875rem;
+    }
+
+    .card-body {
+      padding: 16px;
+    }
+
+    .card-field {
+      margin-bottom: 16px;
+    }
+
+    .card-field label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+
+    .card-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 0.9375rem;
+      transition: all 0.2s ease;
+      background: var(--bg);
+    }
+
+    .card-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: var(--surface);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .card-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .card-photo {
+      margin-bottom: 16px;
+    }
+
+    .photo-preview {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-radius: var(--radius-sm);
+      margin-bottom: 12px;
+      background: var(--bg);
+    }
+
+    .file-input-wrapper {
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+      width: 100%;
+    }
+
+    .file-input-wrapper input[type=file] {
+      position: absolute;
+      left: -9999px;
+    }
+
+    .file-input-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px;
+      background: var(--bg);
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+
+    .file-input-label:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .card-actions {
+      padding: 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 0.9375rem;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-secondary {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    /* Desktop Table View */
+    .desktop-view {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .table-container {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1200px;
+    }
+
+    thead {
+      background: var(--bg);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    th {
+      padding: 16px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    tr:hover {
+      background: var(--bg);
+    }
+
+    .cell-input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      transition: all 0.2s ease;
+      background: transparent;
+    }
+
+    .cell-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: var(--surface);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .cell-input.small {
+      width: 80px;
+    }
+
+    .cell-photo {
+      width: 60px;
+    }
+
+    .table-img-preview {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .table-file-input {
+      width: 80px;
+      font-size: 0.75rem;
+    }
+
+    .save-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .save-btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+
+    .save-btn:active {
+      transform: translateY(0);
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-icon {
+      font-size: 4rem;
+      margin-bottom: 16px;
+      opacity: 0.3;
+    }
+
+    /* Loading State */
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 40px;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--text);
+      color: white;
+      padding: 16px 24px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success {
+      background: var(--primary);
+    }
+
+    .toast.error {
+      background: var(--danger);
+    }
+
+    /* Responsive Breakpoints */
+    @media (max-width: 1024px) {
+      .desktop-view {
+        display: none;
+      }
+      
+      .mobile-view {
+        display: flex;
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .header-content {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .search-container {
+        max-width: none;
+        order: 2;
+      }
+
+      .logo {
+        order: 1;
+        justify-content: center;
+      }
+
+      .stats-bar {
+        grid-template-columns: 1fr;
+      }
+
+      .card-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Smooth scrolling */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-muted);
+    }
   </style>
 </head>
 <body>
 
-<h1>CNG Stations Admin Dashboard</h1>
+  <header class="header">
+    <div class="header-content">
+      <div class="logo">
+        <div class="logo-icon">
+          <i class="fas fa-gas-pump"></i>
+        </div>
+        <span>CNG Admin</span>
+      </div>
+      
+      <div class="search-container">
+        <div class="search-wrapper">
+          <i class="fas fa-search search-icon"></i>
+          <input type="text" id="cityInput" placeholder="Enter city name (e.g., Delhi, Mumbai)...">
+          <button class="load-btn" onclick="fetchStations()">
+            <i class="fas fa-sync-alt"></i>
+            <span>Load</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
 
-<div>
-  <label>Enter City: </label>
-  <input type="text" id="cityInput" placeholder="Delhi">
-  <button onclick="fetchStations()">Load Stations</button>
-</div>
+  <main class="container">
+    <!-- Stats -->
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="stat-icon blue">
+          <i class="fas fa-map-marker-alt"></i>
+        </div>
+        <div class="stat-info">
+          <h3 id="totalStations">0</h3>
+          <p>Total Stations</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon green">
+          <i class="fas fa-star"></i>
+        </div>
+        <div class="stat-info">
+          <h3 id="avgRating">0.0</h3>
+          <p>Average Rating</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon orange">
+          <i class="fas fa-city"></i>
+        </div>
+        <div class="stat-info">
+          <h3 id="currentCity">-</h3>
+          <p>Current City</p>
+        </div>
+      </div>
+    </div>
 
-<table id="stationsTable">
-  <thead>
-    <tr>
-      <th>ID</th>
-      <th>Name</th>
-      <th>Address</th>
-      <th>City</th>
-      <th>Latitude</th>
-      <th>Longitude</th>
-      <th>Pincode</th>
-      <th>Rating</th>
-      <th>User Ratings</th>
-      <th>Photo</th>
-      <th>Update</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
+    <!-- Loading -->
+    <div class="loading" id="loadingState">
+      <div class="spinner"></div>
+      <p>Loading stations...</p>
+    </div>
 
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-storage-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-database-compat.js"></script>
+    <!-- Empty State -->
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">
+        <i class="fas fa-search-location"></i>
+      </div>
+      <h3>No Stations Loaded</h3>
+      <p>Enter a city name above to load CNG stations</p>
+    </div>
 
-<script>
-  // ----------------- FIREBASE CONFIG -----------------
-  
-  async function fetchStations() {
-    const city = document.getElementById('cityInput').value.trim();
-    if (!city) return alert('Please enter a city');
+    <!-- Desktop Table View -->
+    <div class="desktop-view" id="desktopView" style="display: none;">
+      <div class="table-container">
+        <table id="stationsTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Address</th>
+              <th>City</th>
+              <th>Latitude</th>
+              <th>Longitude</th>
+              <th>Pincode</th>
+              <th>Rating</th>
+              <th>Reviews</th>
+              <th>Photo</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
 
-    try {
-      const res = await fetch(`/stations-by-city?city=${encodeURIComponent(city)}`);
-      const data = await res.json();
-      if (!data.success) return alert('Failed to fetch stations');
+    <!-- Mobile Cards View -->
+    <div class="mobile-view" id="mobileView"></div>
+  </main>
 
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <i class="fas fa-check-circle"></i>
+    <span id="toastMessage">Operation successful</span>
+  </div>
+
+  <script>
+    // State
+    let stationsData = [];
+
+    // Show toast notification
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toastMessage');
+      const icon = toast.querySelector('i');
+      
+      toast.className = `toast ${type}`;
+      toastMessage.textContent = message;
+      
+      if (type === 'success') {
+        icon.className = 'fas fa-check-circle';
+      } else {
+        icon.className = 'fas fa-exclamation-circle';
+      }
+      
+      toast.classList.add('show');
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // Update stats
+    function updateStats() {
+      document.getElementById('totalStations').textContent = stationsData.length;
+      
+      const avgRating = stationsData.length > 0 
+        ? (stationsData.reduce((acc, s) => acc + (parseFloat(s.rating) || 0), 0) / stationsData.length).toFixed(1)
+        : '0.0';
+      document.getElementById('avgRating').textContent = avgRating;
+      
+      const city = document.getElementById('cityInput').value.trim() || '-';
+      document.getElementById('currentCity').textContent = city.charAt(0).toUpperCase() + city.slice(1);
+    }
+
+    // Fetch stations
+    async function fetchStations() {
+      const city = document.getElementById('cityInput').value.trim();
+      if (!city) {
+        showToast('Please enter a city name', 'error');
+        return;
+      }
+
+      const loadingState = document.getElementById('loadingState');
+      const emptyState = document.getElementById('emptyState');
+      const desktopView = document.getElementById('desktopView');
+      const mobileView = document.getElementById('mobileView');
+
+      loadingState.style.display = 'block';
+      emptyState.style.display = 'none';
+      desktopView.style.display = 'none';
+      mobileView.innerHTML = '';
+
+      try {
+        const res = await fetch(`/stations-by-city?city=${encodeURIComponent(city)}`);
+        const data = await res.json();
+        
+        if (!data.success) {
+          throw new Error('Failed to fetch stations');
+        }
+
+        stationsData = data.stations;
+        updateStats();
+
+        if (stationsData.length === 0) {
+          emptyState.style.display = 'block';
+          emptyState.innerHTML = `
+            <div class="empty-icon"><i class="fas fa-inbox"></i></div>
+            <h3>No Stations Found</h3>
+            <p>No CNG stations found in "${city}"</p>
+          `;
+        } else {
+          renderDesktopView(stationsData);
+          renderMobileView(stationsData);
+          desktopView.style.display = 'block';
+        }
+
+      } catch (err) {
+        console.error(err);
+        showToast('Error fetching stations', 'error');
+        emptyState.style.display = 'block';
+      } finally {
+        loadingState.style.display = 'none';
+      }
+    }
+
+    // Render desktop table
+    function renderDesktopView(stations) {
       const tbody = document.querySelector('#stationsTable tbody');
       tbody.innerHTML = '';
 
-      data.stations.forEach(station => {
+      stations.forEach(station => {
         const row = document.createElement('tr');
         row.innerHTML = `
-          <td>${station.id}</td>
-          <td><input type="text" value="${station.name || ''}" /></td>
-          <td><input type="text" value="${station.address || ''}" /></td>
-          <td><input type="text" value="${station.city || ''}" /></td>
-          <td><input type="number" step="0.000001" value="${station.latitude || ''}" /></td>
-          <td><input type="number" step="0.000001" value="${station.longitude || ''}" /></td>
-          <td><input type="text" value="${station.pincode || ''}" /></td>
-          <td><input type="number" step="0.1" value="${station.rating || ''}" /></td>
-          <td><input type="number" value="${station.user_ratings_total || ''}" /></td>
-          <td>
-            <img class="img-preview" src="${station.photoUrl || ''}" />
-            <input type="file" accept="image/*" />
+          <td><span class="cell-input small" style="border: none; font-weight: 600; color: var(--text-muted);">${station.id}</span></td>
+          <td><input type="text" class="cell-input" value="${station.name || ''}" placeholder="Station name" /></td>
+          <td><input type="text" class="cell-input" value="${station.address || ''}" placeholder="Address" /></td>
+          <td><input type="text" class="cell-input" value="${station.city || ''}" placeholder="City" /></td>
+          <td><input type="number" step="0.000001" class="cell-input small" value="${station.latitude || ''}" placeholder="Lat" /></td>
+          <td><input type="number" step="0.000001" class="cell-input small" value="${station.longitude || ''}" placeholder="Lng" /></td>
+          <td><input type="text" class="cell-input small" value="${station.pincode || ''}" placeholder="Pincode" /></td>
+          <td><input type="number" step="0.1" class="cell-input small" value="${station.rating || ''}" placeholder="0.0" /></td>
+          <td><input type="number" class="cell-input small" value="${station.user_ratings_total || ''}" placeholder="0" /></td>
+          <td class="cell-photo">
+            <img class="table-img-preview" src="${station.photoUrl || 'https://via.placeholder.com/60?text=No+Image'}" alt="Station" />
+            <input type="file" class="table-file-input" accept="image/*" />
           </td>
-          <td><button onclick="updateStation(this, '${station.id}')">Save</button></td>
+          <td>
+            <button class="save-btn" onclick="updateStation(this, '${station.id}')">
+              <i class="fas fa-save"></i> Save
+            </button>
+          </td>
         `;
         tbody.appendChild(row);
       });
-    } catch (err) {
-      console.error(err);
-      alert('Error fetching stations');
     }
-  }
 
- async function updateStation(button, id) {
-  const row = button.closest('tr');
-  const fileInput = row.querySelector('input[type="file"]');
-  const file = fileInput.files[0];
+    // Render mobile cards
+    function renderMobileView(stations) {
+      const container = document.getElementById('mobileView');
+      container.innerHTML = '';
 
-  const formData = new FormData();
-  formData.append('name', row.cells[1].querySelector('input').value);
-  formData.append('address', row.cells[2].querySelector('input').value);
-  formData.append('city', row.cells[3].querySelector('input').value);
-  formData.append('latitude', row.cells[4].querySelector('input').value);
-  formData.append('longitude', row.cells[5].querySelector('input').value);
-  formData.append('pincode', row.cells[6].querySelector('input').value);
-  formData.append('rating', row.cells[7].querySelector('input').value);
-  formData.append('user_ratings_total', row.cells[8].querySelector('input').value);
+      stations.forEach(station => {
+        const card = document.createElement('div');
+        card.className = 'station-card';
+        card.innerHTML = `
+          <div class="card-header">
+            <span class="card-id">ID: ${station.id}</span>
+            <div class="card-title">${station.name || 'Unnamed Station'}</div>
+            <div class="card-city"><i class="fas fa-map-marker-alt"></i> ${station.city || 'Unknown City'}</div>
+          </div>
+          
+          <div class="card-body">
+            <div class="card-field">
+              <label>Station Name</label>
+              <input type="text" class="card-input" value="${station.name || ''}" placeholder="Enter station name" />
+            </div>
+            
+            <div class="card-field">
+              <label>Address</label>
+              <input type="text" class="card-input" value="${station.address || ''}" placeholder="Enter address" />
+            </div>
+            
+            <div class="card-row">
+              <div class="card-field">
+                <label>City</label>
+                <input type="text" class="card-input" value="${station.city || ''}" placeholder="City" />
+              </div>
+              <div class="card-field">
+                <label>Pincode</label>
+                <input type="text" class="card-input" value="${station.pincode || ''}" placeholder="Pincode" />
+              </div>
+            </div>
+            
+            <div class="card-row">
+              <div class="card-field">
+                <label>Latitude</label>
+                <input type="number" step="0.000001" class="card-input" value="${station.latitude || ''}" placeholder="Latitude" />
+              </div>
+              <div class="card-field">
+                <label>Longitude</label>
+                <input type="number" step="0.000001" class="card-input" value="${station.longitude || ''}" placeholder="Longitude" />
+              </div>
+            </div>
+            
+            <div class="card-row">
+              <div class="card-field">
+                <label>Rating</label>
+                <input type="number" step="0.1" class="card-input" value="${station.rating || ''}" placeholder="0.0" />
+              </div>
+              <div class="card-field">
+                <label>Total Reviews</label>
+                <input type="number" class="card-input" value="${station.user_ratings_total || ''}" placeholder="0" />
+              </div>
+            </div>
+            
+            <div class="card-photo">
+              <label>Station Photo</label>
+              <img class="photo-preview" src="${station.photoUrl || 'https://via.placeholder.com/400x180?text=No+Image+Available'}" alt="Station photo" />
+              <div class="file-input-wrapper">
+                <input type="file" id="file-${station.id}" accept="image/*" onchange="previewImage(this)" />
+                <label for="file-${station.id}" class="file-input-label">
+                  <i class="fas fa-camera"></i> Change Photo
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card-actions">
+            <button class="btn btn-primary" onclick="updateStationMobile(this, '${station.id}')">
+              <i class="fas fa-save"></i> Save Changes
+            </button>
+            <button class="btn btn-secondary" onclick="resetCard(this)">
+              <i class="fas fa-undo"></i> Reset
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
 
-  if (file) formData.append('photo', file);
+    // Preview image before upload (mobile)
+    function previewImage(input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        const preview = input.closest('.card-photo').querySelector('.photo-preview');
+        const label = input.nextElementSibling;
+        
+        reader.onload = function(e) {
+          preview.src = e.target.result;
+          label.innerHTML = '<i class="fas fa-check"></i> Photo selected';
+          label.style.borderColor = 'var(--primary)';
+          label.style.color = 'var(--primary)';
+        };
+        
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
 
-  try {
-    const res = await fetch(`/update-station-with-image/${id}`, {
-      method: 'POST',
-      body: formData
+    // Reset card to original values
+    function resetCard(button) {
+      const card = button.closest('.station-card');
+      const stationId = card.querySelector('.card-id').textContent.replace('ID: ', '');
+      const originalStation = stationsData.find(s => s.id === stationId);
+      
+      if (originalStation) {
+        renderMobileView([originalStation]);
+        showToast('Card reset to original values');
+      }
+    }
+
+    // Update station (desktop)
+    async function updateStation(button, id) {
+      const row = button.closest('tr');
+      const fileInput = row.querySelector('input[type="file"]');
+      const file = fileInput.files[0];
+
+      const formData = new FormData();
+      formData.append('name', row.cells[1].querySelector('input').value);
+      formData.append('address', row.cells[2].querySelector('input').value);
+      formData.append('city', row.cells[3].querySelector('input').value);
+      formData.append('latitude', row.cells[4].querySelector('input').value);
+      formData.append('longitude', row.cells[5].querySelector('input').value);
+      formData.append('pincode', row.cells[6].querySelector('input').value);
+      formData.append('rating', row.cells[7].querySelector('input').value);
+      formData.append('user_ratings_total', row.cells[8].querySelector('input').value);
+
+      if (file) formData.append('photo', file);
+
+      button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+      button.disabled = true;
+
+      try {
+        const res = await fetch(`/update-station-with-image/${id}`, {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          showToast('Station updated successfully');
+          if (data.photoUrl) {
+            row.querySelector('.table-img-preview').src = data.photoUrl;
+          }
+          fileInput.value = '';
+        } else {
+          throw new Error('Update failed');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to update station', 'error');
+      } finally {
+        button.innerHTML = '<i class="fas fa-save"></i> Save';
+        button.disabled = false;
+      }
+    }
+
+    // Update station (mobile)
+    async function updateStationMobile(button, id) {
+      const card = button.closest('.station-card');
+      const fileInput = card.querySelector('input[type="file"]');
+      const file = fileInput.files[0];
+
+      const formData = new FormData();
+      formData.append('name', card.querySelectorAll('.card-input')[0].value);
+      formData.append('address', card.querySelectorAll('.card-input')[1].value);
+      formData.append('city', card.querySelectorAll('.card-input')[2].value);
+      formData.append('pincode', card.querySelectorAll('.card-input')[3].value);
+      formData.append('latitude', card.querySelectorAll('.card-input')[4].value);
+      formData.append('longitude', card.querySelectorAll('.card-input')[5].value);
+      formData.append('rating', card.querySelectorAll('.card-input')[6].value);
+      formData.append('user_ratings_total', card.querySelectorAll('.card-input')[7].value);
+
+      if (file) formData.append('photo', file);
+
+      button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+      button.disabled = true;
+
+      try {
+        const res = await fetch(`/update-station-with-image/${id}`, {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          showToast('Station updated successfully');
+          if (data.photoUrl) {
+            card.querySelector('.photo-preview').src = data.photoUrl;
+          }
+          // Reset file input
+          fileInput.value = '';
+          const label = fileInput.nextElementSibling;
+          label.innerHTML = '<i class="fas fa-camera"></i> Change Photo';
+          label.style.borderColor = 'var(--border)';
+          label.style.color = 'var(--text-muted)';
+        } else {
+          throw new Error('Update failed');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to update station', 'error');
+      } finally {
+        button.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+        button.disabled = false;
+      }
+    }
+
+    // Enter key to search
+    document.getElementById('cityInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        fetchStations();
+      }
     });
-
-    const data = await res.json();
-    if (data.success) {
-      alert('Station updated successfully');
-      if (data.photoUrl) row.querySelector('img.img-preview').src = data.photoUrl;
-      fileInput.value = '';
-    } else {
-      alert('Failed to update station');
-    }
-
-  } catch (err) {
-    console.error(err);
-    alert('Error updating station');
-  }
-  }
-</script>
+  </script>
 </body>
 </html>
