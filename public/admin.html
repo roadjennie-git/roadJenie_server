@@ -20,7 +20,7 @@
       --border: #e2e8f0;
       --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
       --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1);
       --radius: 12px;
       --radius-sm: 8px;
     }
@@ -38,7 +38,6 @@
       color: var(--text);
       line-height: 1.6;
       min-height: 100vh;
-      padding: 0;
     }
 
     /* Header */
@@ -53,7 +52,7 @@
     }
 
     .header-content {
-      max-width: 1400px;
+      max-width: 1200px;
       margin: 0 auto;
       display: flex;
       align-items: center;
@@ -67,7 +66,6 @@
       gap: 12px;
       font-weight: 700;
       font-size: 1.25rem;
-      color: var(--text);
     }
 
     .logo-icon {
@@ -82,11 +80,9 @@
       font-size: 1.25rem;
     }
 
-    /* Search Bar */
     .search-container {
       flex: 1;
-      max-width: 500px;
-      position: relative;
+      max-width: 400px;
     }
 
     .search-wrapper {
@@ -120,178 +116,273 @@
       color: var(--text);
     }
 
-    #cityInput::placeholder {
-      color: var(--text-muted);
-    }
-
     .load-btn {
       background: var(--primary);
       color: white;
       border: none;
-      padding: 12px 24px;
+      padding: 12px 20px;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      gap: 8px;
       border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      transition: all 0.2s ease;
     }
 
     .load-btn:hover {
       background: var(--primary-dark);
     }
 
-    .load-btn:active {
-      transform: scale(0.98);
-    }
-
     /* Main Container */
     .container {
-      max-width: 1400px;
+      max-width: 1200px;
       margin: 0 auto;
       padding: 20px;
     }
 
-    /* Stats Bar */
+    /* Stats */
     .stats-bar {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
       margin-bottom: 24px;
     }
 
     .stat-card {
       background: var(--surface);
-      padding: 20px;
+      padding: 16px;
       border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Stations List */
+    .stations-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .station-item {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 16px 20px;
       box-shadow: var(--shadow-sm);
       display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: 16px;
+      transition: all 0.2s ease;
+      cursor: pointer;
     }
 
-    .stat-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: var(--radius-sm);
+    .station-item:hover {
+      box-shadow: var(--shadow);
+      transform: translateY(-1px);
+    }
+
+    .station-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .station-name {
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .station-meta {
       display: flex;
       align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
-    }
-
-    .stat-icon.blue { background: #dbeafe; color: #2563eb; }
-    .stat-icon.green { background: var(--primary-light); color: var(--primary-dark); }
-    .stat-icon.orange { background: #ffedd5; color: #ea580c; }
-
-    .stat-info h3 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--text);
-    }
-
-    .stat-info p {
+      gap: 12px;
       font-size: 0.875rem;
       color: var(--text-muted);
     }
 
-    /* Mobile Cards View */
-    .mobile-view {
-      display: none;
-      gap: 16px;
+    .station-meta span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
 
-    .station-card {
-      background: var(--surface);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow: hidden;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .station-card:active {
-      transform: scale(0.99);
-    }
-
-    .card-header {
-      padding: 16px;
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: white;
-      position: relative;
-    }
-
-    .card-id {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      background: rgba(255,255,255,0.2);
-      padding: 4px 12px;
+    .rating-badge {
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      padding: 4px 8px;
       border-radius: 20px;
       font-size: 0.75rem;
       font-weight: 600;
     }
 
-    .card-title {
-      font-size: 1.125rem;
-      font-weight: 600;
-      margin-bottom: 4px;
-      padding-right: 80px;
+    .edit-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
     }
 
-    .card-city {
+    .edit-btn:hover {
+      background: var(--primary-dark);
+      transform: scale(1.05);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+      transform: scale(0.9) translateY(20px);
+      transition: all 0.3s ease;
+    }
+
+    .modal-overlay.active .modal {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-header {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      padding: 20px;
+      position: relative;
+    }
+
+    .modal-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .modal-subtitle {
       opacity: 0.9;
       font-size: 0.875rem;
     }
 
-    .card-body {
-      padding: 16px;
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
     }
 
-    .card-field {
-      margin-bottom: 16px;
+    .modal-close:hover {
+      background: rgba(255, 255, 255, 0.3);
     }
 
-    .card-field label {
-      display: block;
+    .modal-body {
+      padding: 24px;
+      overflow-y: auto;
+      max-height: calc(90vh - 200px);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .form-label {
       font-size: 0.75rem;
       font-weight: 600;
       color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      margin-bottom: 6px;
     }
 
-    .card-input {
-      width: 100%;
-      padding: 10px 12px;
+    .form-input {
+      padding: 12px 16px;
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       font-size: 0.9375rem;
       transition: all 0.2s ease;
       background: var(--bg);
+      width: 100%;
     }
 
-    .card-input:focus {
+    .form-input:focus {
       outline: none;
       border-color: var(--primary);
       background: var(--surface);
       box-shadow: 0 0 0 3px var(--primary-light);
     }
 
-    .card-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    .card-photo {
-      margin-bottom: 16px;
+    .photo-section {
+      grid-column: 1 / -1;
+      margin-top: 8px;
     }
 
     .photo-preview {
       width: 100%;
-      height: 180px;
+      height: 200px;
       object-fit: cover;
       border-radius: var(--radius-sm);
       margin-bottom: 12px;
@@ -301,8 +392,6 @@
     .file-input-wrapper {
       position: relative;
       overflow: hidden;
-      display: inline-block;
-      width: 100%;
     }
 
     .file-input-wrapper input[type=file] {
@@ -310,7 +399,7 @@
       left: -9999px;
     }
 
-    .file-input-label {
+    .file-label {
       display: flex;
       align-items: center;
       justify-content: center;
@@ -322,16 +411,15 @@
       cursor: pointer;
       transition: all 0.2s ease;
       color: var(--text-muted);
-      font-size: 0.875rem;
     }
 
-    .file-input-label:hover {
+    .file-label:hover {
       border-color: var(--primary);
       color: var(--primary);
     }
 
-    .card-actions {
-      padding: 16px;
+    .modal-footer {
+      padding: 20px 24px;
       border-top: 1px solid var(--border);
       display: flex;
       gap: 12px;
@@ -339,7 +427,7 @@
 
     .btn {
       flex: 1;
-      padding: 12px;
+      padding: 12px 24px;
       border: none;
       border-radius: var(--radius-sm);
       font-weight: 600;
@@ -367,132 +455,15 @@
       border: 1px solid var(--border);
     }
 
-    /* Desktop Table View */
-    .desktop-view {
-      background: var(--surface);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow: hidden;
+    .btn-secondary:hover {
+      background: var(--border);
     }
 
-    .table-container {
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 1200px;
-    }
-
-    thead {
-      background: var(--bg);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-
-    th {
-      padding: 16px;
-      text-align: left;
-      font-weight: 600;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-muted);
-      border-bottom: 1px solid var(--border);
-      white-space: nowrap;
-    }
-
-    td {
-      padding: 16px;
-      border-bottom: 1px solid var(--border);
-      vertical-align: top;
-    }
-
-    tr:hover {
-      background: var(--bg);
-    }
-
-    .cell-input {
-      width: 100%;
-      padding: 8px 12px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      font-size: 0.875rem;
-      transition: all 0.2s ease;
-      background: transparent;
-    }
-
-    .cell-input:focus {
-      outline: none;
-      border-color: var(--primary);
-      background: var(--surface);
-      box-shadow: 0 0 0 3px var(--primary-light);
-    }
-
-    .cell-input.small {
-      width: 80px;
-    }
-
-    .cell-photo {
-      width: 60px;
-    }
-
-    .table-img-preview {
-      width: 60px;
-      height: 60px;
-      object-fit: cover;
-      border-radius: var(--radius-sm);
-      margin-bottom: 8px;
-      display: block;
-    }
-
-    .table-file-input {
-      width: 80px;
-      font-size: 0.75rem;
-    }
-
-    .save-btn {
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: var(--radius-sm);
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      white-space: nowrap;
-    }
-
-    .save-btn:hover {
-      background: var(--primary-dark);
-      transform: translateY(-1px);
-    }
-
-    .save-btn:active {
-      transform: translateY(0);
-    }
-
-    /* Empty State */
-    .empty-state {
+    /* Loading & Empty States */
+    .loading {
       text-align: center;
       padding: 60px 20px;
-      color: var(--text-muted);
-    }
-
-    .empty-icon {
-      font-size: 4rem;
-      margin-bottom: 16px;
-      opacity: 0.3;
-    }
-
-    /* Loading State */
-    .loading {
       display: none;
-      text-align: center;
-      padding: 40px;
     }
 
     .spinner {
@@ -509,11 +480,24 @@
       to { transform: rotate(360deg); }
     }
 
-    /* Toast Notification */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-icon {
+      font-size: 4rem;
+      margin-bottom: 16px;
+      opacity: 0.3;
+    }
+
+    /* Toast */
     .toast {
       position: fixed;
       bottom: 20px;
-      right: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
       background: var(--text);
       color: white;
       padding: 16px 24px;
@@ -522,14 +506,13 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      transform: translateY(100px);
       opacity: 0;
       transition: all 0.3s ease;
-      z-index: 1000;
+      z-index: 2000;
     }
 
     .toast.show {
-      transform: translateY(0);
+      transform: translateX(-50%) translateY(0);
       opacity: 1;
     }
 
@@ -541,18 +524,7 @@
       background: var(--danger);
     }
 
-    /* Responsive Breakpoints */
-    @media (max-width: 1024px) {
-      .desktop-view {
-        display: none;
-      }
-      
-      .mobile-view {
-        display: flex;
-        flex-direction: column;
-      }
-    }
-
+    /* Responsive */
     @media (max-width: 640px) {
       .header-content {
         flex-direction: column;
@@ -561,45 +533,20 @@
 
       .search-container {
         max-width: none;
-        order: 2;
       }
 
-      .logo {
-        order: 1;
-        justify-content: center;
-      }
-
-      .stats-bar {
+      .form-grid {
         grid-template-columns: 1fr;
       }
 
-      .card-row {
-        grid-template-columns: 1fr;
+      .modal {
+        max-height: 95vh;
+        margin: 10px;
       }
-    }
 
-    /* Smooth scrolling */
-    html {
-      scroll-behavior: smooth;
-    }
-
-    /* Custom scrollbar */
-    ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: var(--bg);
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: var(--border);
-      border-radius: 4px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-      background: var(--text-muted);
+      .modal-body {
+        max-height: calc(95vh - 180px);
+      }
     }
   </style>
 </head>
@@ -617,10 +564,9 @@
       <div class="search-container">
         <div class="search-wrapper">
           <i class="fas fa-search search-icon"></i>
-          <input type="text" id="cityInput" placeholder="Enter city name (e.g., Delhi, Mumbai)...">
+          <input type="text" id="cityInput" placeholder="Enter city name...">
           <button class="load-btn" onclick="fetchStations()">
             <i class="fas fa-sync-alt"></i>
-            <span>Load</span>
           </button>
         </div>
       </div>
@@ -628,91 +574,122 @@
   </header>
 
   <main class="container">
-    <!-- Stats -->
     <div class="stats-bar">
       <div class="stat-card">
-        <div class="stat-icon blue">
-          <i class="fas fa-map-marker-alt"></i>
-        </div>
-        <div class="stat-info">
-          <h3 id="totalStations">0</h3>
-          <p>Total Stations</p>
-        </div>
+        <div class="stat-value" id="totalStations">0</div>
+        <div class="stat-label">Stations</div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon green">
-          <i class="fas fa-star"></i>
-        </div>
-        <div class="stat-info">
-          <h3 id="avgRating">0.0</h3>
-          <p>Average Rating</p>
-        </div>
+        <div class="stat-value" id="avgRating">0.0</div>
+        <div class="stat-label">Avg Rating</div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon orange">
-          <i class="fas fa-city"></i>
-        </div>
-        <div class="stat-info">
-          <h3 id="currentCity">-</h3>
-          <p>Current City</p>
-        </div>
+        <div class="stat-value" id="currentCity">-</div>
+        <div class="stat-label">City</div>
       </div>
     </div>
 
-    <!-- Loading -->
     <div class="loading" id="loadingState">
       <div class="spinner"></div>
       <p>Loading stations...</p>
     </div>
 
-    <!-- Empty State -->
     <div class="empty-state" id="emptyState">
-      <div class="empty-icon">
-        <i class="fas fa-search-location"></i>
-      </div>
-      <h3>No Stations Loaded</h3>
-      <p>Enter a city name above to load CNG stations</p>
+      <div class="empty-icon"><i class="fas fa-search-location"></i></div>
+      <h3>Search for Stations</h3>
+      <p>Enter a city name to view CNG stations</p>
     </div>
 
-    <!-- Desktop Table View -->
-    <div class="desktop-view" id="desktopView" style="display: none;">
-      <div class="table-container">
-        <table id="stationsTable">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Address</th>
-              <th>City</th>
-              <th>Latitude</th>
-              <th>Longitude</th>
-              <th>Pincode</th>
-              <th>Rating</th>
-              <th>Reviews</th>
-              <th>Photo</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Mobile Cards View -->
-    <div class="mobile-view" id="mobileView"></div>
+    <div class="stations-list" id="stationsList" style="display: none;"></div>
   </main>
+
+  <!-- Edit Modal -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal">
+      <div class="modal-header">
+        <button class="modal-close" onclick="closeModal()">
+          <i class="fas fa-times"></i>
+        </button>
+        <div class="modal-title" id="modalTitle">Edit Station</div>
+        <div class="modal-subtitle" id="modalSubtitle">ID: <span id="modalStationId"></span></div>
+      </div>
+      
+      <div class="modal-body">
+        <form id="editForm" class="form-grid">
+          <div class="form-group full-width">
+            <label class="form-label">Station Name</label>
+            <input type="text" class="form-input" id="editName" placeholder="Enter station name">
+          </div>
+          
+          <div class="form-group full-width">
+            <label class="form-label">Address</label>
+            <input type="text" class="form-input" id="editAddress" placeholder="Enter full address">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">City</label>
+            <input type="text" class="form-input" id="editCity" placeholder="City">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Pincode</label>
+            <input type="text" class="form-input" id="editPincode" placeholder="Pincode">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Latitude</label>
+            <input type="number" step="0.000001" class="form-input" id="editLat" placeholder="Latitude">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Longitude</label>
+            <input type="number" step="0.000001" class="form-input" id="editLng" placeholder="Longitude">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Rating</label>
+            <input type="number" step="0.1" min="0" max="5" class="form-input" id="editRating" placeholder="0.0 - 5.0">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Total Reviews</label>
+            <input type="number" class="form-input" id="editReviews" placeholder="Number of reviews">
+          </div>
+          
+          <div class="form-group photo-section">
+            <label class="form-label">Station Photo</label>
+            <img class="photo-preview" id="photoPreview" src="" alt="Station photo">
+            <div class="file-input-wrapper">
+              <input type="file" id="photoInput" accept="image/*" onchange="previewPhoto(this)">
+              <label for="photoInput" class="file-label">
+                <i class="fas fa-camera"></i> <span id="photoText">Change Photo</span>
+              </label>
+            </div>
+          </div>
+        </form>
+      </div>
+      
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal()">
+          <i class="fas fa-times"></i> Cancel
+        </button>
+        <button class="btn btn-primary" onclick="saveStation()">
+          <i class="fas fa-save"></i> Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Toast -->
   <div class="toast" id="toast">
     <i class="fas fa-check-circle"></i>
-    <span id="toastMessage">Operation successful</span>
+    <span id="toastMessage">Success</span>
   </div>
 
   <script>
-    // State
     let stationsData = [];
+    let currentEditingId = null;
 
-    // Show toast notification
     function showToast(message, type = 'success') {
       const toast = document.getElementById('toast');
       const toastMessage = document.getElementById('toastMessage');
@@ -720,34 +697,22 @@
       
       toast.className = `toast ${type}`;
       toastMessage.textContent = message;
-      
-      if (type === 'success') {
-        icon.className = 'fas fa-check-circle';
-      } else {
-        icon.className = 'fas fa-exclamation-circle';
-      }
+      icon.className = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
       
       toast.classList.add('show');
-      
-      setTimeout(() => {
-        toast.classList.remove('show');
-      }, 3000);
+      setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
-    // Update stats
     function updateStats() {
       document.getElementById('totalStations').textContent = stationsData.length;
-      
-      const avgRating = stationsData.length > 0 
-        ? (stationsData.reduce((acc, s) => acc + (parseFloat(s.rating) || 0), 0) / stationsData.length).toFixed(1)
+      const avg = stationsData.length > 0 
+        ? (stationsData.reduce((a, s) => a + (parseFloat(s.rating) || 0), 0) / stationsData.length).toFixed(1)
         : '0.0';
-      document.getElementById('avgRating').textContent = avgRating;
-      
-      const city = document.getElementById('cityInput').value.trim() || '-';
-      document.getElementById('currentCity').textContent = city.charAt(0).toUpperCase() + city.slice(1);
+      document.getElementById('avgRating').textContent = avg;
+      const city = document.getElementById('cityInput').value.trim();
+      document.getElementById('currentCity').textContent = city ? city.charAt(0).toUpperCase() + city.slice(1) : '-';
     }
 
-    // Fetch stations
     async function fetchStations() {
       const city = document.getElementById('cityInput').value.trim();
       if (!city) {
@@ -755,296 +720,166 @@
         return;
       }
 
-      const loadingState = document.getElementById('loadingState');
-      const emptyState = document.getElementById('emptyState');
-      const desktopView = document.getElementById('desktopView');
-      const mobileView = document.getElementById('mobileView');
-
-      loadingState.style.display = 'block';
-      emptyState.style.display = 'none';
-      desktopView.style.display = 'none';
-      mobileView.innerHTML = '';
+      document.getElementById('loadingState').style.display = 'block';
+      document.getElementById('emptyState').style.display = 'none';
+      document.getElementById('stationsList').style.display = 'none';
 
       try {
         const res = await fetch(`/stations-by-city?city=${encodeURIComponent(city)}`);
         const data = await res.json();
         
-        if (!data.success) {
-          throw new Error('Failed to fetch stations');
-        }
+        if (!data.success) throw new Error('Failed to fetch');
 
         stationsData = data.stations;
         updateStats();
 
         if (stationsData.length === 0) {
-          emptyState.style.display = 'block';
-          emptyState.innerHTML = `
+          document.getElementById('emptyState').innerHTML = `
             <div class="empty-icon"><i class="fas fa-inbox"></i></div>
             <h3>No Stations Found</h3>
             <p>No CNG stations found in "${city}"</p>
           `;
+          document.getElementById('emptyState').style.display = 'block';
         } else {
-          renderDesktopView(stationsData);
-          renderMobileView(stationsData);
-          desktopView.style.display = 'block';
+          renderStationsList();
+          document.getElementById('stationsList').style.display = 'flex';
         }
-
       } catch (err) {
-        console.error(err);
         showToast('Error fetching stations', 'error');
-        emptyState.style.display = 'block';
+        document.getElementById('emptyState').style.display = 'block';
       } finally {
-        loadingState.style.display = 'none';
+        document.getElementById('loadingState').style.display = 'none';
       }
     }
 
-    // Render desktop table
-    function renderDesktopView(stations) {
-      const tbody = document.querySelector('#stationsTable tbody');
-      tbody.innerHTML = '';
-
-      stations.forEach(station => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td><span class="cell-input small" style="border: none; font-weight: 600; color: var(--text-muted);">${station.id}</span></td>
-          <td><input type="text" class="cell-input" value="${station.name || ''}" placeholder="Station name" /></td>
-          <td><input type="text" class="cell-input" value="${station.address || ''}" placeholder="Address" /></td>
-          <td><input type="text" class="cell-input" value="${station.city || ''}" placeholder="City" /></td>
-          <td><input type="number" step="0.000001" class="cell-input small" value="${station.latitude || ''}" placeholder="Lat" /></td>
-          <td><input type="number" step="0.000001" class="cell-input small" value="${station.longitude || ''}" placeholder="Lng" /></td>
-          <td><input type="text" class="cell-input small" value="${station.pincode || ''}" placeholder="Pincode" /></td>
-          <td><input type="number" step="0.1" class="cell-input small" value="${station.rating || ''}" placeholder="0.0" /></td>
-          <td><input type="number" class="cell-input small" value="${station.user_ratings_total || ''}" placeholder="0" /></td>
-          <td class="cell-photo">
-            <img class="table-img-preview" src="${station.photoUrl || 'https://via.placeholder.com/60?text=No+Image'}" alt="Station" />
-            <input type="file" class="table-file-input" accept="image/*" />
-          </td>
-          <td>
-            <button class="save-btn" onclick="updateStation(this, '${station.id}')">
-              <i class="fas fa-save"></i> Save
-            </button>
-          </td>
-        `;
-        tbody.appendChild(row);
-      });
-    }
-
-    // Render mobile cards
-    function renderMobileView(stations) {
-      const container = document.getElementById('mobileView');
+    function renderStationsList() {
+      const container = document.getElementById('stationsList');
       container.innerHTML = '';
 
-      stations.forEach(station => {
-        const card = document.createElement('div');
-        card.className = 'station-card';
-        card.innerHTML = `
-          <div class="card-header">
-            <span class="card-id">ID: ${station.id}</span>
-            <div class="card-title">${station.name || 'Unnamed Station'}</div>
-            <div class="card-city"><i class="fas fa-map-marker-alt"></i> ${station.city || 'Unknown City'}</div>
-          </div>
-          
-          <div class="card-body">
-            <div class="card-field">
-              <label>Station Name</label>
-              <input type="text" class="card-input" value="${station.name || ''}" placeholder="Enter station name" />
-            </div>
-            
-            <div class="card-field">
-              <label>Address</label>
-              <input type="text" class="card-input" value="${station.address || ''}" placeholder="Enter address" />
-            </div>
-            
-            <div class="card-row">
-              <div class="card-field">
-                <label>City</label>
-                <input type="text" class="card-input" value="${station.city || ''}" placeholder="City" />
-              </div>
-              <div class="card-field">
-                <label>Pincode</label>
-                <input type="text" class="card-input" value="${station.pincode || ''}" placeholder="Pincode" />
-              </div>
-            </div>
-            
-            <div class="card-row">
-              <div class="card-field">
-                <label>Latitude</label>
-                <input type="number" step="0.000001" class="card-input" value="${station.latitude || ''}" placeholder="Latitude" />
-              </div>
-              <div class="card-field">
-                <label>Longitude</label>
-                <input type="number" step="0.000001" class="card-input" value="${station.longitude || ''}" placeholder="Longitude" />
-              </div>
-            </div>
-            
-            <div class="card-row">
-              <div class="card-field">
-                <label>Rating</label>
-                <input type="number" step="0.1" class="card-input" value="${station.rating || ''}" placeholder="0.0" />
-              </div>
-              <div class="card-field">
-                <label>Total Reviews</label>
-                <input type="number" class="card-input" value="${station.user_ratings_total || ''}" placeholder="0" />
-              </div>
-            </div>
-            
-            <div class="card-photo">
-              <label>Station Photo</label>
-              <img class="photo-preview" src="${station.photoUrl || 'https://via.placeholder.com/400x180?text=No+Image+Available'}" alt="Station photo" />
-              <div class="file-input-wrapper">
-                <input type="file" id="file-${station.id}" accept="image/*" onchange="previewImage(this)" />
-                <label for="file-${station.id}" class="file-input-label">
-                  <i class="fas fa-camera"></i> Change Photo
-                </label>
-              </div>
+      stationsData.forEach(station => {
+        const item = document.createElement('div');
+        item.className = 'station-item';
+        item.innerHTML = `
+          <div class="station-info">
+            <div class="station-name">${station.name || 'Unnamed Station'}</div>
+            <div class="station-meta">
+              <span><i class="fas fa-map-marker-alt"></i> ${station.city || 'Unknown'}</span>
+              <span><i class="fas fa-star"></i> ${station.rating || '0.0'}</span>
+              <span class="rating-badge">${station.user_ratings_total || 0} reviews</span>
             </div>
           </div>
-          
-          <div class="card-actions">
-            <button class="btn btn-primary" onclick="updateStationMobile(this, '${station.id}')">
-              <i class="fas fa-save"></i> Save Changes
-            </button>
-            <button class="btn btn-secondary" onclick="resetCard(this)">
-              <i class="fas fa-undo"></i> Reset
-            </button>
-          </div>
+          <button class="edit-btn" onclick="openEditModal('${station.id}')">
+            <i class="fas fa-pen"></i>
+          </button>
         `;
-        container.appendChild(card);
+        container.appendChild(item);
       });
     }
 
-    // Preview image before upload (mobile)
-    function previewImage(input) {
+    function openEditModal(stationId) {
+      const station = stationsData.find(s => s.id === stationId);
+      if (!station) return;
+
+      currentEditingId = stationId;
+      
+      document.getElementById('modalStationId').textContent = stationId;
+      document.getElementById('editName').value = station.name || '';
+      document.getElementById('editAddress').value = station.address || '';
+      document.getElementById('editCity').value = station.city || '';
+      document.getElementById('editPincode').value = station.pincode || '';
+      document.getElementById('editLat').value = station.latitude || '';
+      document.getElementById('editLng').value = station.longitude || '';
+      document.getElementById('editRating').value = station.rating || '';
+      document.getElementById('editReviews').value = station.user_ratings_total || '';
+      
+      const photoPreview = document.getElementById('photoPreview');
+      photoPreview.src = station.photoUrl || 'https://via.placeholder.com/600x200?text=No+Image';
+      
+      document.getElementById('photoInput').value = '';
+      document.getElementById('photoText').textContent = 'Change Photo';
+      
+      document.getElementById('editModal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      document.getElementById('editModal').classList.remove('active');
+      document.body.style.overflow = '';
+      currentEditingId = null;
+    }
+
+    function previewPhoto(input) {
       if (input.files && input.files[0]) {
         const reader = new FileReader();
-        const preview = input.closest('.card-photo').querySelector('.photo-preview');
-        const label = input.nextElementSibling;
-        
         reader.onload = function(e) {
-          preview.src = e.target.result;
-          label.innerHTML = '<i class="fas fa-check"></i> Photo selected';
-          label.style.borderColor = 'var(--primary)';
-          label.style.color = 'var(--primary)';
+          document.getElementById('photoPreview').src = e.target.result;
+          document.getElementById('photoText').textContent = 'Photo selected';
         };
-        
         reader.readAsDataURL(input.files[0]);
       }
     }
 
-    // Reset card to original values
-    function resetCard(button) {
-      const card = button.closest('.station-card');
-      const stationId = card.querySelector('.card-id').textContent.replace('ID: ', '');
-      const originalStation = stationsData.find(s => s.id === stationId);
-      
-      if (originalStation) {
-        renderMobileView([originalStation]);
-        showToast('Card reset to original values');
-      }
-    }
-
-    // Update station (desktop)
-    async function updateStation(button, id) {
-      const row = button.closest('tr');
-      const fileInput = row.querySelector('input[type="file"]');
-      const file = fileInput.files[0];
+    async function saveStation() {
+      if (!currentEditingId) return;
 
       const formData = new FormData();
-      formData.append('name', row.cells[1].querySelector('input').value);
-      formData.append('address', row.cells[2].querySelector('input').value);
-      formData.append('city', row.cells[3].querySelector('input').value);
-      formData.append('latitude', row.cells[4].querySelector('input').value);
-      formData.append('longitude', row.cells[5].querySelector('input').value);
-      formData.append('pincode', row.cells[6].querySelector('input').value);
-      formData.append('rating', row.cells[7].querySelector('input').value);
-      formData.append('user_ratings_total', row.cells[8].querySelector('input').value);
+      formData.append('name', document.getElementById('editName').value);
+      formData.append('address', document.getElementById('editAddress').value);
+      formData.append('city', document.getElementById('editCity').value);
+      formData.append('pincode', document.getElementById('editPincode').value);
+      formData.append('latitude', document.getElementById('editLat').value);
+      formData.append('longitude', document.getElementById('editLng').value);
+      formData.append('rating', document.getElementById('editRating').value);
+      formData.append('user_ratings_total', document.getElementById('editReviews').value);
 
-      if (file) formData.append('photo', file);
+      const photoInput = document.getElementById('photoInput');
+      if (photoInput.files[0]) {
+        formData.append('photo', photoInput.files[0]);
+      }
 
-      button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-      button.disabled = true;
+      const saveBtn = document.querySelector('.btn-primary');
+      const originalText = saveBtn.innerHTML;
+      saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+      saveBtn.disabled = true;
 
       try {
-        const res = await fetch(`/update-station-with-image/${id}`, {
+        const res = await fetch(`/update-station-with-image/${currentEditingId}`, {
           method: 'POST',
           body: formData
         });
 
         const data = await res.json();
         if (data.success) {
-          showToast('Station updated successfully');
-          if (data.photoUrl) {
-            row.querySelector('.table-img-preview').src = data.photoUrl;
+          // Update local data
+          const index = stationsData.findIndex(s => s.id === currentEditingId);
+          if (index !== -1) {
+            stationsData[index] = { ...stationsData[index], ...Object.fromEntries(formData) };
+            if (data.photoUrl) stationsData[index].photoUrl = data.photoUrl;
           }
-          fileInput.value = '';
+          
+          renderStationsList();
+          updateStats();
+          showToast('Station updated successfully');
+          closeModal();
         } else {
           throw new Error('Update failed');
         }
       } catch (err) {
-        console.error(err);
         showToast('Failed to update station', 'error');
       } finally {
-        button.innerHTML = '<i class="fas fa-save"></i> Save';
-        button.disabled = false;
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
       }
     }
 
-    // Update station (mobile)
-    async function updateStationMobile(button, id) {
-      const card = button.closest('.station-card');
-      const fileInput = card.querySelector('input[type="file"]');
-      const file = fileInput.files[0];
-
-      const formData = new FormData();
-      formData.append('name', card.querySelectorAll('.card-input')[0].value);
-      formData.append('address', card.querySelectorAll('.card-input')[1].value);
-      formData.append('city', card.querySelectorAll('.card-input')[2].value);
-      formData.append('pincode', card.querySelectorAll('.card-input')[3].value);
-      formData.append('latitude', card.querySelectorAll('.card-input')[4].value);
-      formData.append('longitude', card.querySelectorAll('.card-input')[5].value);
-      formData.append('rating', card.querySelectorAll('.card-input')[6].value);
-      formData.append('user_ratings_total', card.querySelectorAll('.card-input')[7].value);
-
-      if (file) formData.append('photo', file);
-
-      button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-      button.disabled = true;
-
-      try {
-        const res = await fetch(`/update-station-with-image/${id}`, {
-          method: 'POST',
-          body: formData
-        });
-
-        const data = await res.json();
-        if (data.success) {
-          showToast('Station updated successfully');
-          if (data.photoUrl) {
-            card.querySelector('.photo-preview').src = data.photoUrl;
-          }
-          // Reset file input
-          fileInput.value = '';
-          const label = fileInput.nextElementSibling;
-          label.innerHTML = '<i class="fas fa-camera"></i> Change Photo';
-          label.style.borderColor = 'var(--border)';
-          label.style.color = 'var(--text-muted)';
-        } else {
-          throw new Error('Update failed');
-        }
-      } catch (err) {
-        console.error(err);
-        showToast('Failed to update station', 'error');
-      } finally {
-        button.innerHTML = '<i class="fas fa-save"></i> Save Changes';
-        button.disabled = false;
-      }
-    }
+    // Close modal on overlay click
+    document.getElementById('editModal').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
 
     // Enter key to search
     document.getElementById('cityInput').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') {
-        fetchStations();
-      }
+      if (e.key === 'Enter') fetchStations();
     });
   </script>
 </body>
