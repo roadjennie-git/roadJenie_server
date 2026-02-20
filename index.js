@@ -334,15 +334,13 @@ app.post('/stations-along-route', async (req, res) => {
 
 
 ///NEWS API
-
 app.get("/car-travel-news", async (req, res) => {
   try {
-    const API_KEY = process.env.API_KEY_NEWS; // Replace with your key
-    const url = `https://newsapi.org/v2/everything`;
+    const API_KEY = process.env.API_KEY_NEWS;
 
-    const { data } = await axios.get(url, {
+    const { data } = await axios.get("https://newsapi.org/v2/everything", {
       params: {
-        q: "car OR automobile OR travel",
+        q: `(India OR Indian) AND (car OR automobile OR EV OR "electric vehicle" OR highway OR road trip OR FASTag OR NHAI OR travel tourism)`,
         language: "en",
         sortBy: "publishedAt",
         pageSize: 20,
@@ -350,25 +348,27 @@ app.get("/car-travel-news", async (req, res) => {
       }
     });
 
-    const news = data.articles.map(article => ({
-      title: article.title,
-      imagelink: article.urlToImage || "",
-      desc: article.description || "",
-      newslink: article.url,
-      time: article.publishedAt || "Recently",
-      cat: "Automotive"
-    }));
+    const news = data.articles
+      .filter(article => article.urlToImage && article.title)
+      .map(article => ({
+        title: article.title,
+        imagelink: article.urlToImage,
+        desc: article.description || "",
+        newslink: article.url,
+        time: article.publishedAt || "Recently",
+        cat: "Automotive"
+      }));
 
     res.json({
       success: true,
       count: news.length,
-      news: news
+      news
     });
 
   } catch (err) {
     res.status(500).json({
       success: false,
-      message: err.message,
+      message: err.response?.data || err.message,
       news: []
     });
   }
