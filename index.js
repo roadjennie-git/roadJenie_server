@@ -2,7 +2,6 @@ const axios = require('axios');
 require('dotenv').config();
 const admin = require('firebase-admin');
 const geofire = require('geofire-common');
-const { parse } = require('node-html-parser');
 const express = require('express');
 const cheerio = require("cheerio");
 const cors = require('cors');
@@ -335,49 +334,43 @@ app.post('/stations-along-route', async (req, res) => {
 
 
 ///NEWS API
+
 app.get("/car-travel-news", async (req, res) => {
   try {
-    const url = "https://auto.economictimes.indiatimes.com/";
-    // const url = "https://www.drivespark.com/";
-    
+    const API_KEY = process.env.API_KEY_NEWS; // Replace with your key
+    const url = `https://newsapi.org/v2/everything`;
+
     const { data } = await axios.get(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-      }
-    });
-    
-    const $ = cheerio.load(data);
-    const news = [];
-
-    $("article, .story-box, .eachStory").each((i, el) => {
-      const title = $(el).find("h2, h3, .title").text().trim();
-      const link = $(el).find("a").attr("href");
-      const image = $(el).find("img").attr("src") || $(el).find("img").attr("data-src");
-      const description = $(el).find("p, .summary").text().trim();
-      const time = $(el).find(".time, .date, time").text().trim() || "Recently";
-      const cat = "Automotive";
-
-      if (title && link) {
-        news.push({
-          title: title,
-          imagelink: image && !image.startsWith("http") 
-            ? `${url}${image}`  
-            : (image || ""),
-          desc: description || "",
-          newslink: link.startsWith("http") 
-            ? link 
-            : `${url}${link}`,
-          time: time,
-          cat: cat
-        });
+      params: {
+        q: "car OR automobile OR travel",
+        language: "en",
+        sortBy: "publishedAt",
+        pageSize: 20,
+        apiKey: API_KEY
       }
     });
 
-    // Return only the JSON
-    res.json({ success: true, count: news.length, news: news });
+    const news = data.articles.map(article => ({
+      title: article.title,
+      imagelink: article.urlToImage || "",
+      desc: article.description || "",
+      newslink: article.url,
+      time: article.publishedAt || "Recently",
+      cat: "Automotive"
+    }));
+
+    res.json({
+      success: true,
+      count: news.length,
+      news: news
+    });
 
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message, news: [] });
+    res.status(500).json({
+      success: false,
+      message: err.message,
+      news: []
+    });
   }
 });
 ///
