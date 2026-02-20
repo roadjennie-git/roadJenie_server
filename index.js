@@ -3,7 +3,6 @@ require('dotenv').config();
 const admin = require('firebase-admin');
 const geofire = require('geofire-common');
 const express = require('express');
-const cheerio = require("cheerio");
 const cors = require('cors');
 const geolib = require('geolib');
 const { decode } = require('@googlemaps/polyline-codec');
@@ -11,12 +10,10 @@ const path = require("path");
 const multer = require('multer');
 const { getStorage } = require('firebase-admin/storage');
 const upload = multer({ storage: multer.memoryStorage() });
-// ✅ Create express app ONCE
 const app = express();
 
-// Serve HTML + static files
+///INIT
 app.use(express.static("public"));
-
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
@@ -506,6 +503,59 @@ app.post('/update-station-with-image/:id', upload.single('photo'), async (req, r
   }
 });
 
+/* -------------------- API: ADD STATION -------------------- */
+app.post("/add-station", upload.single("photo"), async (req, res) => {
+  try {
+    const {
+      name,
+      address,
+      city,
+      pincode,
+      latitude,
+      longitude,
+      rating,
+      user_ratings_total
+    } = req.body;
+
+    const newRef = db.ref("CNG_Stations").push();
+    const stationId = newRef.key;
+
+    let photoUrl = "";
+
+    // If image uploaded
+    if (req.file) {
+      const bucket = getStorage().bucket();
+      const fileName = `station_photos/${stationId}_${Date.now()}_${req.file.originalname}`;
+      const fileRef = bucket.file(fileName);
+
+      await fileRef.save(req.file.buffer, {
+        contentType: req.file.mimetype,
+        public: true,
+      });
+
+      photoUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+    }
+
+    await newRef.set({
+      name,
+      address,
+      city,
+      pincode,
+      latitude: parseFloat(latitude),
+      longitude: parseFloat(longitude),
+      rating: parseFloat(rating || 0),
+      user_ratings_total: parseInt(user_ratings_total || 0),
+      photoUrl,
+      opening_hours: true
+    });
+
+    res.json({ success: true, id: stationId });
+
+  } catch (err) {
+    console.error("ADD STATION ERROR:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 /* -------------------- START SERVER -------------------- */
 
