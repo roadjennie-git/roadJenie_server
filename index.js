@@ -485,19 +485,18 @@ app.post('/stations-along-route', async (req, res) => {
   }
 });
 
+///NEWS API
 app.get("/car-travel-news", async (req, res) => {
   try {
     const API_KEY = process.env.API_KEY_NEWS;
 
     const { data } = await axios.get("https://newsapi.org/v2/everything", {
       params: {
-        q: `India OR Indian`,
+        q: `(India OR Indian) AND (car OR automobile OR EV OR "electric vehicle" OR highway OR road trip OR FASTag OR NHAI OR travel tourism)`,
         language: "en",
         sortBy: "publishedAt",
         pageSize: 20,
-        apiKey: API_KEY,
-        // Only pull from trusted automotive sources
-        domains: "autocarindia.com,zigwheels.com,cardekho.com,bikewale.com,carandbike.com,motorbeam.com,team-bhp.com,autosport.com,motortrend.com"
+        apiKey: API_KEY
       }
     });
 
@@ -526,6 +525,8 @@ app.get("/car-travel-news", async (req, res) => {
     });
   }
 });
+///
+
 
 /* -------------------- API: STATIONS BY CITY -------------------- */
 
