@@ -1,6 +1,7 @@
 const axios = require('axios');
 require('dotenv').config();
 const admin = require('firebase-admin');
+const cookieParser = require('cookie-parser');
 const geofire = require('geofire-common');
 const express = require('express');
 const cors = require('cors');
@@ -8,23 +9,19 @@ const geolib = require('geolib');
 const { decode } = require('@googlemaps/polyline-codec');
 const path = require("path");
 const multer = require('multer');
+const crypto = require('crypto');
 const { getStorage } = require('firebase-admin/storage');
 const upload = multer({ storage: multer.memoryStorage() });
 const app = express();
 
-///INIT
-app.use(express.static("public"));
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
-app.get("/admin", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "admin.html"));
-});
-
-
-// Enable JSON + CORS
-app.use(cors());
+// Enable JSON + CORS + Cookie Parser (BEFORE routes)
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
 app.use(express.json());
+app.use(cookieParser());
+app.use(express.static("public"));
 
 /* -------------------- FIREBASE SETUP -------------------- */
 
@@ -50,7 +47,166 @@ if (!admin.apps.length) {
 }
 
 const db = admin.database();
+const firestore = admin.firestore();
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
+
+// JWT Secret for admin tokens
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-env';
+const TOKEN_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
+
+// Helper: Generate JWT token
+function generateToken(adminId) {
+  const payload = {
+    adminId,
+    iat: Date.now(),
+    exp: Date.now() + TOKEN_EXPIRY
+  };
+  const payloadStr = JSON.stringify(payload);
+  const payloadBase64 = Buffer.from(payloadStr).toString('base64');
+  
+  // Sign the base64-encoded payload
+  const signature = crypto
+    .createHmac('sha256', JWT_SECRET)
+    .update(payloadBase64)
+    .digest('hex');
+  
+  return `${payloadBase64}.${signature}`;
+}
+
+// Helper: Verify JWT token
+function verifyToken(token) {
+  try {
+    // Handle potential URL encoding from cookies
+    const decodedToken = decodeURIComponent(token);
+    const [payloadStr, signature] = decodedToken.split('.');
+    
+    const expectedSignature = crypto
+      .createHmac('sha256', JWT_SECRET)
+      .update(payloadStr)
+      .digest('hex');
+    
+    if (signature !== expectedSignature) {
+      console.log('[VERIFY] ❌ Signature mismatch');
+      console.log('[VERIFY] Expected:', expectedSignature);
+      console.log('[VERIFY] Got:', signature);
+      return null;
+    }
+    
+    const payload = JSON.parse(Buffer.from(payloadStr, 'base64').toString());
+    if (payload.exp < Date.now()) {
+      console.log('[VERIFY] ❌ Token expired');
+      return null;
+    }
+    
+    return payload;
+  } catch (err) {
+    console.error('[VERIFY] Error:', err.message);
+    return null;
+  }
+}
+
+// Middleware: Verify admin token
+function verifyAdminToken(req, res, next) {
+  const token = req.cookies?.adminToken || req.headers?.authorization?.replace('Bearer ', '') || req.headers?.['x-admin-token'];
+  
+  if (!token) {
+    return res.redirect('/login');
+  }
+  
+  const payload = verifyToken(token);
+  if (!payload) {
+    return res.redirect('/login');
+  }
+  
+  req.adminId = payload.adminId;
+  next();
+}
+
+/* -------------------- ROUTES -------------------- */
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+app.get("/login", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "login.html"));
+});
+
+app.get("/admin", verifyAdminToken, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "admin.html"));
+});
+
+/* -------------------- API: ADMIN AUTHENTICATION -------------------- */
+
+app.post('/admin-login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    
+    if (!username || !password) {
+      return res.status(400).json({ success: false, message: 'Username and password required' });
+    }
+    
+    // Fetch admin from Firestore
+    const adminRef = firestore.collection('admin_users').doc(username);
+    const adminDoc = await adminRef.get();
+    
+    if (!adminDoc.exists) {
+      return res.status(401).json({ success: false, message: 'Invalid username or password' });
+    }
+    
+    const adminData = adminDoc.data();
+    
+    // Simple password validation (in production, use bcrypt)
+    if (adminData.password !== password) {
+      return res.status(401).json({ success: false, message: 'Invalid username or password' });
+    }
+    
+    // Generate token
+    const token = generateToken(username);
+    
+    // Set secure HTTP-only cookie
+    res.cookie('adminToken', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: TOKEN_EXPIRY,
+      path: '/'
+    });
+    
+    res.json({ success: true, message: 'Login successful', token });
+    
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ success: false, message: 'Login failed' });
+  }
+});
+
+app.post('/verify-token', (req, res) => {
+  const token = req.cookies?.adminToken || req.headers?.authorization?.replace('Bearer ', '') || req.headers?.['x-admin-token'];
+  
+  console.log('[VERIFY-TOKEN] Checking authentication...');
+  console.log('[VERIFY-TOKEN] Cookies received:', { adminToken: req.cookies?.adminToken ? 'YES' : 'NO' });
+  console.log('[VERIFY-TOKEN] Auth header:', req.headers?.authorization ? 'YES' : 'NO');
+  
+  if (!token) {
+    console.log('[VERIFY-TOKEN] ❌ No token found');
+    return res.status(401).json({ valid: false });
+  }
+  
+  const payload = verifyToken(token);
+  if (!payload) {
+    console.log('[VERIFY-TOKEN] ❌ Token invalid or expired');
+    return res.status(401).json({ valid: false });
+  }
+  
+  console.log('[VERIFY-TOKEN] ✅ Token valid for admin:', payload.adminId);
+  res.json({ valid: true, adminId: payload.adminId });
+});
+
+app.post('/admin-logout', (req, res) => {
+  res.clearCookie('adminToken');
+  res.json({ success: true, message: 'Logged out successfully' });
+});
 
 
 /* -------------------- VALIDATION -------------------- */
@@ -329,19 +485,19 @@ app.post('/stations-along-route', async (req, res) => {
   }
 });
 
-
-///NEWS API
 app.get("/car-travel-news", async (req, res) => {
   try {
     const API_KEY = process.env.API_KEY_NEWS;
 
     const { data } = await axios.get("https://newsapi.org/v2/everything", {
       params: {
-        q: `(India OR Indian) AND (car OR automobile OR EV OR "electric vehicle" OR highway OR road trip OR FASTag OR NHAI OR travel tourism)`,
+        q: `India OR Indian`,
         language: "en",
         sortBy: "publishedAt",
         pageSize: 20,
-        apiKey: API_KEY
+        apiKey: API_KEY,
+        // Only pull from trusted automotive sources
+        domains: "autocarindia.com,zigwheels.com,cardekho.com,bikewale.com,carandbike.com,motorbeam.com,team-bhp.com,autosport.com,motortrend.com"
       }
     });
 
@@ -370,7 +526,6 @@ app.get("/car-travel-news", async (req, res) => {
     });
   }
 });
-///
 
 /* -------------------- API: STATIONS BY CITY -------------------- */
 
@@ -560,4 +715,19 @@ app.post("/add-station", upload.single("photo"), async (req, res) => {
 /* -------------------- START SERVER -------------------- */
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on ${PORT}`));
+const server = app.listen(PORT, () => console.log(`Server running on ${PORT}`));
+
+// Error handling
+server.on('error', (err) => {
+  console.error('Server error:', err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  process.exit(1);
+});
