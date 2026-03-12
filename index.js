@@ -484,32 +484,69 @@ app.post('/stations-along-route', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error', details: error.message });
   }
 });
-
-///NEWS API
-app.get("/car-travel-news", async (req, res) => {
+///CRON
+async function fetchAndStoreCarNews() {
   try {
-    const API_KEY = process.env.API_KEY_NEWS;
+    console.log("Fetching automobile news...");
 
-    const { data } = await axios.get("https://newsapi.org/v2/everything", {
+    const API_KEY = process.env.API_KEY_GNEWS;
+
+    const { data } = await axios.get("https://gnews.io/api/v4/search", {
       params: {
-        q: `(India OR Indian) AND (car OR automobile OR EV OR "electric vehicle" OR highway OR road trip OR FASTag OR NHAI OR travel tourism)`,
-        language: "en",
-        sortBy: "publishedAt",
-        pageSize: 20,
-        apiKey: API_KEY
+        q:'(automobile OR automotive OR car OR EV OR "electric vehicle" OR "car launch" OR "car review") AND India',
+        max: 40,
+        sortby: "date",
+        token: API_KEY
       }
     });
 
     const news = data.articles
-      .filter(article => article.urlToImage && article.title)
+      .filter(article => article.image && article.title)
       .map(article => ({
         title: article.title,
-        imagelink: article.urlToImage,
+        imagelink: article.image,
         desc: article.description || "",
         newslink: article.url,
         time: article.publishedAt || "Recently",
-        cat: "Automotive"
+        cat: "Automotive",
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
       }));
+
+    const batch = firestore.batch();
+    const newsCollection = firestore.collection("car_news");
+
+    // Clear old news
+    const oldDocs = await newsCollection.get();
+    oldDocs.forEach(doc => batch.delete(doc.ref));
+
+    // Add new news
+    news.forEach(item => {
+      const ref = newsCollection.doc();
+      batch.set(ref, item);
+    });
+
+    await batch.commit();
+
+    console.log(`Saved ${news.length} news articles to Firestore`);
+  } catch (error) {
+    console.error("News cron error:", error.message);
+  }
+}
+app.get("/api/cron-news", async (req, res) => {
+  await fetchAndStoreCarNews();
+  res.json({ success: true });
+});
+///NEWS API - GNews
+app.get("/car-travel-news", async (req, res) => {
+  try {
+    const snapshot = await firestore
+  .collection("car_news")
+  .orderBy("createdAt", "desc")
+  .limit(40)
+  .get();
+
+    const news = [];
+    snapshot.forEach(doc => news.push(doc.data()));
 
     res.json({
       success: true,
@@ -520,7 +557,7 @@ app.get("/car-travel-news", async (req, res) => {
   } catch (err) {
     res.status(500).json({
       success: false,
-      message: err.response?.data || err.message,
+      message: err.message,
       news: []
     });
   }

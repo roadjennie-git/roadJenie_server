@@ -21,6 +21,7 @@
     "geofire-common": "^6.0.0",
     "geolib": "^3.3.4",
     "multer": "^2.0.2",
+    "node-cron": "^4.2.1",
     "node-html-parser": "^7.0.1"
   },
   "repository": {
