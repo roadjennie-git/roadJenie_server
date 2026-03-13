@@ -707,6 +707,7 @@ app.post("/add-station", upload.single("photo"), async (req, res) => {
       latitude,
       longitude,
       rating,
+        place_id ,
       user_ratings_total
     } = req.body;
 
@@ -739,7 +740,8 @@ app.post("/add-station", upload.single("photo"), async (req, res) => {
       rating: parseFloat(rating || 0),
       user_ratings_total: parseInt(user_ratings_total || 0),
       photoUrl,
-      opening_hours: true
+      opening_hours: true,
+       place_id: place_id || "" 
     });
 
     res.json({ success: true, id: stationId });

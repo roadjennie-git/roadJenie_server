@@ -533,6 +533,40 @@
       background: var(--danger);
     }
 
+    /* Place ID lookup */
+    .place-id-wrapper {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .lookup-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      white-space: nowrap;
+      font-size: 0.875rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .lookup-btn:hover { background: var(--primary-dark); }
+    .lookup-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .place-id-hint {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+      font-style: italic;
+    }
+
     /* Responsive */
     @media (max-width: 640px) {
       .header-content {
@@ -555,6 +589,15 @@
 
       .modal-body {
         max-height: calc(95vh - 180px);
+      }
+
+      .place-id-wrapper {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .lookup-btn {
+        justify-content: center;
       }
     }
   </style>
@@ -579,9 +622,11 @@
           </button>
         </div>
       </div>
+
       <button class="btn btn-primary" style="flex: none;" onclick="openAddModal()">
-  <i class="fas fa-plus"></i> Add Station
-</button>
+        <i class="fas fa-plus"></i> Add Station
+      </button>
+
       <button class="btn btn-danger" onclick="handleLogout()" title="Logout">
         <i class="fas fa-sign-out-alt"></i> Logout
       </button>
@@ -618,7 +663,7 @@
     <div class="stations-list" id="stationsList" style="display: none;"></div>
   </main>
 
-  <!-- Edit Modal -->
+  <!-- Edit / Add Modal -->
   <div class="modal-overlay" id="editModal">
     <div class="modal">
       <div class="modal-header">
@@ -631,6 +676,7 @@
       
       <div class="modal-body">
         <form id="editForm" class="form-grid">
+
           <div class="form-group full-width">
             <label class="form-label">Station Name</label>
             <input type="text" class="form-input" id="editName" placeholder="Enter station name">
@@ -660,14 +706,17 @@
             <label class="form-label">Longitude</label>
             <input type="number" step="0.000001" class="form-input" id="editLng" placeholder="Longitude">
           </div>
+
           <div class="form-group full-width">
-  <label class="form-label">Search Location</label>
-  <input type="text" id="mapSearchInput" class="form-input" placeholder="Search address or place...">
-</div>
+            <label class="form-label">Search Location</label>
+            <input type="text" id="mapSearchInput" class="form-input" placeholder="Search address or place...">
+          </div>
+
           <div class="form-group full-width">
-  <label class="form-label">Select Location on Map</label>
-  <div id="stationMap" style="height:300px; width:100%; border-radius:8px;"></div>
-</div>
+            <label class="form-label">Select Location on Map</label>
+            <div id="stationMap" style="height:300px; width:100%; border-radius:8px;"></div>
+          </div>
+          
           <div class="form-group">
             <label class="form-label">Rating</label>
             <input type="number" step="0.1" min="0" max="5" class="form-input" id="editRating" placeholder="0.0 - 5.0">
@@ -677,7 +726,19 @@
             <label class="form-label">Total Reviews</label>
             <input type="number" class="form-input" id="editReviews" placeholder="Number of reviews">
           </div>
-          
+
+          <!-- PLACE ID FIELD -->
+          <div class="form-group full-width">
+            <label class="form-label">Place ID</label>
+            <div class="place-id-wrapper">
+              <input type="text" class="form-input" id="editPlaceId" placeholder="e.g. ChIJnTmQkIDzTDoRnQlpRnppzWU">
+              <button type="button" class="lookup-btn" id="lookupBtn" onclick="lookupPlaceId()">
+                <i class="fas fa-search"></i> Auto-fill
+              </button>
+            </div>
+            <span class="place-id-hint">Enter station name + city above, then click Auto-fill to fetch automatically.</span>
+          </div>
+
           <div class="form-group photo-section">
             <label class="form-label">Station Photo</label>
             <img class="photo-preview" id="photoPreview" src="" alt="Station photo">
@@ -688,6 +749,7 @@
               </label>
             </div>
           </div>
+
         </form>
       </div>
       
@@ -695,7 +757,7 @@
         <button class="btn btn-secondary" onclick="closeModal()">
           <i class="fas fa-times"></i> Cancel
         </button>
-      <button class="btn btn-primary" id="saveBtn" onclick="saveStation()">
+        <button class="btn btn-primary" id="saveBtn" onclick="saveStation()">
           <i class="fas fa-save"></i> Save Changes
         </button>
       </div>
@@ -707,9 +769,12 @@
     <i class="fas fa-check-circle"></i>
     <span id="toastMessage">Success</span>
   </div>
+
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA9KChURa7uBrCmyLVBilt4jYHWKjKuUUI&libraries=places"></script>
+
   <script>
-    // Check session on page load
+    /* -------------------- SESSION -------------------- */
+
     async function checkAdminSession() {
       try {
         const response = await fetch('/verify-token', {
@@ -717,39 +782,24 @@
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include'
         });
-        
-        if (!response.ok) {
-          window.location.href = '/login';
-          return false;
-        }
-        
+        if (!response.ok) { window.location.href = '/login'; return false; }
         const data = await response.json();
-        if (!data.valid) {
-          window.location.href = '/login';
-          return false;
-        }
-        
+        if (!data.valid) { window.location.href = '/login'; return false; }
         return true;
       } catch (err) {
-        console.error('Session check failed:', err);
         window.location.href = '/login';
         return false;
       }
     }
 
-    // Handle logout
     async function handleLogout() {
-      if (!confirm('Are you sure you want to logout?')) {
-        return;
-      }
-
+      if (!confirm('Are you sure you want to logout?')) return;
       try {
         const response = await fetch('/admin-logout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include'
         });
-
         if (response.ok) {
           localStorage.removeItem('adminToken');
           window.location.href = '/login';
@@ -757,47 +807,50 @@
           alert('Logout failed. Please try again.');
         }
       } catch (err) {
-        console.error('Logout error:', err);
         alert('Logout failed. Please try again.');
       }
     }
 
-    // Check session when page loads
     window.addEventListener('load', checkAdminSession);
+
+    /* -------------------- STATE -------------------- */
 
     let stationsData = [];
     let currentEditingId = null;
-let isAddMode = false;
+    let isAddMode = false;
+
+    /* -------------------- TOAST -------------------- */
 
     function showToast(message, type = 'success') {
       const toast = document.getElementById('toast');
       const toastMessage = document.getElementById('toastMessage');
       const icon = toast.querySelector('i');
-      
       toast.className = `toast ${type}`;
       toastMessage.textContent = message;
       icon.className = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
-      
       toast.classList.add('show');
       setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
+    /* -------------------- STATS -------------------- */
+
     function updateStats() {
       document.getElementById('totalStations').textContent = stationsData.length;
-      const avg = stationsData.length > 0 
+      const avg = stationsData.length > 0
         ? (stationsData.reduce((a, s) => a + (parseFloat(s.rating) || 0), 0) / stationsData.length).toFixed(1)
         : '0.0';
       document.getElementById('avgRating').textContent = avg;
       const city = document.getElementById('cityInput').value.trim();
-      document.getElementById('currentCity').textContent = city ? city.charAt(0).toUpperCase() + city.slice(1) : '-';
+      document.getElementById('currentCity').textContent = city
+        ? city.charAt(0).toUpperCase() + city.slice(1)
+        : '-';
     }
+
+    /* -------------------- FETCH STATIONS -------------------- */
 
     async function fetchStations() {
       const city = document.getElementById('cityInput').value.trim();
-      if (!city) {
-        showToast('Please enter a city name', 'error');
-        return;
-      }
+      if (!city) { showToast('Please enter a city name', 'error'); return; }
 
       document.getElementById('loadingState').style.display = 'block';
       document.getElementById('emptyState').style.display = 'none';
@@ -806,7 +859,6 @@ let isAddMode = false;
       try {
         const res = await fetch(`/stations-by-city?city=${encodeURIComponent(city)}`);
         const data = await res.json();
-        
         if (!data.success) throw new Error('Failed to fetch');
 
         stationsData = data.stations;
@@ -831,10 +883,11 @@ let isAddMode = false;
       }
     }
 
+    /* -------------------- RENDER LIST -------------------- */
+
     function renderStationsList() {
       const container = document.getElementById('stationsList');
       container.innerHTML = '';
-
       stationsData.forEach(station => {
         const item = document.createElement('div');
         item.className = 'station-item';
@@ -845,6 +898,10 @@ let isAddMode = false;
               <span><i class="fas fa-map-marker-alt"></i> ${station.city || 'Unknown'}</span>
               <span><i class="fas fa-star"></i> ${station.rating || '0.0'}</span>
               <span class="rating-badge">${station.user_ratings_total || 0} reviews</span>
+              ${station.place_id
+                ? `<span style="font-size:0.7rem; color:var(--primary);"><i class="fas fa-fingerprint"></i> ID saved</span>`
+                : `<span style="font-size:0.7rem; color:var(--danger);"><i class="fas fa-exclamation-circle"></i> No Place ID</span>`
+              }
             </div>
           </div>
           <button class="edit-btn" onclick="openEditModal('${station.id}')">
@@ -855,14 +912,16 @@ let isAddMode = false;
       });
     }
 
+    /* -------------------- OPEN EDIT MODAL -------------------- */
+
     function openEditModal(stationId) {
       isAddMode = false;
-document.getElementById('modalTitle').textContent = "Edit Station";
+      document.getElementById('modalTitle').textContent = 'Edit Station';
       const station = stationsData.find(s => s.id === stationId);
       if (!station) return;
 
       currentEditingId = stationId;
-      
+
       document.getElementById('modalStationId').textContent = stationId;
       document.getElementById('editName').value = station.name || '';
       document.getElementById('editAddress').value = station.address || '';
@@ -872,20 +931,40 @@ document.getElementById('modalTitle').textContent = "Edit Station";
       document.getElementById('editLng').value = station.longitude || '';
       document.getElementById('editRating').value = station.rating || '';
       document.getElementById('editReviews').value = station.user_ratings_total || '';
-      
+      document.getElementById('editPlaceId').value = station.place_id || '';   // ← place_id
+
       const photoPreview = document.getElementById('photoPreview');
       photoPreview.src = station.photoUrl || 'https://via.placeholder.com/600x200?text=No+Image';
-      
+
       document.getElementById('photoInput').value = '';
       document.getElementById('photoText').textContent = 'Change Photo';
-      
+
       document.getElementById('editModal').classList.add('active');
       document.body.style.overflow = 'hidden';
 
-setTimeout(() => {
-  initStationMap(station.latitude, station.longitude);
-}, 300);
+      setTimeout(() => initStationMap(station.latitude, station.longitude), 300);
     }
+
+    /* -------------------- OPEN ADD MODAL -------------------- */
+
+    function openAddModal() {
+      isAddMode = true;
+      currentEditingId = null;
+
+      document.getElementById('modalTitle').textContent = 'Add New Station';
+      document.getElementById('modalStationId').textContent = 'New';
+
+      document.getElementById('editForm').reset();
+      document.getElementById('editPlaceId').value = '';
+      document.getElementById('photoPreview').src = 'https://via.placeholder.com/600x200?text=No+Image';
+
+      document.getElementById('editModal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+
+      setTimeout(() => initStationMap(), 300);
+    }
+
+    /* -------------------- CLOSE MODAL -------------------- */
 
     function closeModal() {
       document.getElementById('editModal').classList.remove('active');
@@ -893,10 +972,16 @@ setTimeout(() => {
       currentEditingId = null;
     }
 
+    document.getElementById('editModal').addEventListener('click', function (e) {
+      if (e.target === this) closeModal();
+    });
+
+    /* -------------------- PHOTO PREVIEW -------------------- */
+
     function previewPhoto(input) {
       if (input.files && input.files[0]) {
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = function (e) {
           document.getElementById('photoPreview').src = e.target.result;
           document.getElementById('photoText').textContent = 'Photo selected';
         };
@@ -904,148 +989,144 @@ setTimeout(() => {
       }
     }
 
-async function saveStation() {
+    /* -------------------- PLACE ID LOOKUP -------------------- */
 
-  const formData = new FormData();
-  formData.append('name', document.getElementById('editName').value);
-  formData.append('address', document.getElementById('editAddress').value);
-  formData.append('city', document.getElementById('editCity').value);
-  formData.append('pincode', document.getElementById('editPincode').value);
-  formData.append('latitude', document.getElementById('editLat').value);
-  formData.append('longitude', document.getElementById('editLng').value);
-  formData.append('rating', document.getElementById('editRating').value);
-  formData.append('user_ratings_total', document.getElementById('editReviews').value);
+    async function lookupPlaceId() {
+      const name = document.getElementById('editName').value.trim();
+      const city = document.getElementById('editCity').value.trim();
 
-  const photoInput = document.getElementById('photoInput');
-  if (photoInput.files[0]) {
-    formData.append('photo', photoInput.files[0]);
-  }
+      if (!name) {
+        showToast('Enter a station name first', 'error');
+        return;
+      }
 
-  const saveBtn = document.getElementById('saveBtn');
-  const originalText = saveBtn.innerHTML;
-  saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-  saveBtn.disabled = true;
+      const btn = document.getElementById('lookupBtn');
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Looking up...';
+      btn.disabled = true;
 
-  try {
+      try {
+        const res = await fetch(
+          `/lookup-place-id?name=${encodeURIComponent(name)}&city=${encodeURIComponent(city)}`
+        );
+        const data = await res.json();
 
-    let url = '';
-    if (isAddMode) {
-      url = '/add-station';   // NEW ENDPOINT
-    } else {
-      url = `/update-station-with-image/${currentEditingId}`;
+        if (data.found && data.place_id) {
+          document.getElementById('editPlaceId').value = data.place_id;
+          showToast('Place ID found!', 'success');
+        } else {
+          showToast('No match found — enter Place ID manually', 'error');
+        }
+      } catch (err) {
+        showToast('Lookup failed', 'error');
+      } finally {
+        btn.innerHTML = '<i class="fas fa-search"></i> Auto-fill';
+        btn.disabled = false;
+      }
     }
 
-    const res = await fetch(url, {
-      method: 'POST',
-      body: formData
-    });
+    /* -------------------- SAVE STATION -------------------- */
 
-    const data = await res.json();
+    async function saveStation() {
+      const formData = new FormData();
+      formData.append('name', document.getElementById('editName').value);
+      formData.append('address', document.getElementById('editAddress').value);
+      formData.append('city', document.getElementById('editCity').value);
+      formData.append('pincode', document.getElementById('editPincode').value);
+      formData.append('latitude', document.getElementById('editLat').value);
+      formData.append('longitude', document.getElementById('editLng').value);
+      formData.append('rating', document.getElementById('editRating').value);
+      formData.append('user_ratings_total', document.getElementById('editReviews').value);
+      formData.append('place_id', document.getElementById('editPlaceId').value);  // ← place_id
 
-    if (!data.success) throw new Error();
+      const photoInput = document.getElementById('photoInput');
+      if (photoInput.files[0]) formData.append('photo', photoInput.files[0]);
 
-    showToast(isAddMode ? 'Station added successfully' : 'Station updated successfully');
+      const saveBtn = document.getElementById('saveBtn');
+      const originalText = saveBtn.innerHTML;
+      saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+      saveBtn.disabled = true;
 
-    closeModal();
-    fetchStations(); // reload list
+      try {
+        const url = isAddMode ? '/add-station' : `/update-station-with-image/${currentEditingId}`;
+        const res = await fetch(url, { method: 'POST', body: formData });
+        const data = await res.json();
+        if (!data.success) throw new Error();
 
-  } catch (err) {
-    showToast('Failed to save station', 'error');
-  } finally {
-    saveBtn.innerHTML = originalText;
-    saveBtn.disabled = false;
-  }
-}
-    // Close modal on overlay click
-    document.getElementById('editModal').addEventListener('click', function(e) {
-      if (e.target === this) closeModal();
-    });
+        showToast(isAddMode ? 'Station added successfully!' : 'Station updated successfully!');
+        closeModal();
+        fetchStations();
+      } catch (err) {
+        showToast('Failed to save station', 'error');
+      } finally {
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+      }
+    }
 
-    // Enter key to search
-    document.getElementById('cityInput').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') fetchStations();
-    });
+    /* -------------------- MAP -------------------- */
 
-  function openAddModal() {
-  isAddMode = true;
-  currentEditingId = null;
+    let map;
+    let marker;
+    let autocomplete;
 
-  document.getElementById('modalTitle').textContent = "Add New Station";
-  document.getElementById('modalStationId').textContent = "New";
+    function initStationMap(lat = 20.5937, lng = 78.9629) {
+      const location = {
+        lat: parseFloat(lat) || 20.5937,
+        lng: parseFloat(lng) || 78.9629
+      };
 
-  document.getElementById('editForm').reset();
-  document.getElementById('photoPreview').src =
-    'https://via.placeholder.com/600x200?text=No+Image';
+      if (!map) {
+        map = new google.maps.Map(document.getElementById('stationMap'), {
+          zoom: 5,
+          center: location,
+        });
 
-  document.getElementById('editModal').classList.add('active');
-  document.body.style.overflow = 'hidden';
+        marker = new google.maps.Marker({
+          position: location,
+          map: map,
+          draggable: true
+        });
 
-  setTimeout(() => {
-    initStationMap();   // initialize map
-  }, 300);
-}
-let map;
-let marker;
-let autocomplete;
+        map.addListener('click', function (event) {
+          marker.setPosition(event.latLng);
+          updateLatLngInputs(event.latLng);
+        });
 
-function initStationMap(lat = 20.5937, lng = 78.9629) {
+        marker.addListener('dragend', function (event) {
+          updateLatLngInputs(event.latLng);
+        });
 
-  const location = {
-    lat: parseFloat(lat) || 20.5937,
-    lng: parseFloat(lng) || 78.9629
-  };
-
-  if (!map) {
-    map = new google.maps.Map(document.getElementById("stationMap"), {
-      zoom: 5,
-      center: location,
-    });
-
-    marker = new google.maps.Marker({
-      position: location,
-      map: map,
-      draggable: true
-    });
-
-    map.addListener("click", function (event) {
-      marker.setPosition(event.latLng);
-      updateLatLngInputs(event.latLng);
-    });
-
-    marker.addListener("dragend", function (event) {
-      updateLatLngInputs(event.latLng);
-    });
-
-    const input = document.getElementById("mapSearchInput");
-  autocomplete = new google.maps.places.Autocomplete(input, {
-  componentRestrictions: { country: "in" }
-});
-
-    autocomplete.bindTo("bounds", map);
-
-    autocomplete.addListener("place_changed", function () {
-      const place = autocomplete.getPlace();
-      if (!place.geometry) return;
-
-      const location = place.geometry.location;
+        const input = document.getElementById('mapSearchInput');
+        autocomplete = new google.maps.places.Autocomplete(input, {
+          componentRestrictions: { country: 'in' }
+        });
+        autocomplete.bindTo('bounds', map);
+        autocomplete.addListener('place_changed', function () {
+          const place = autocomplete.getPlace();
+          if (!place.geometry) return;
+          const loc = place.geometry.location;
+          map.setCenter(loc);
+          map.setZoom(15);
+          marker.setPosition(loc);
+          updateLatLngInputs(loc);
+        });
+      }
 
       map.setCenter(location);
-      map.setZoom(15);
       marker.setPosition(location);
-
       updateLatLngInputs(location);
+    }
+
+    function updateLatLngInputs(latLng) {
+      document.getElementById('editLat').value = latLng.lat();
+      document.getElementById('editLng').value = latLng.lng();
+    }
+
+    /* -------------------- KEYBOARD -------------------- */
+
+    document.getElementById('cityInput').addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') fetchStations();
     });
-  }
-
-  map.setCenter(location);
-  marker.setPosition(location);
-  updateLatLngInputs(location);
-}
-
-function updateLatLngInputs(latLng) {
-  document.getElementById("editLat").value = latLng.lat();
-  document.getElementById("editLng").value = latLng.lng();
-}
   </script>
 </body>
 </html>
