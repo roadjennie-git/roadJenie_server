@@ -632,6 +632,7 @@ app.post('/update-station/:id', async (req, res) => {
       pincode: data.pincode,
       rating: Number(data.rating),
       user_ratings_total: Number(data.user_ratings_total),
+      place_id: data.place_id || '', 
     };
 
     await stationRef.update(updateData);
@@ -770,4 +771,41 @@ process.on('unhandledRejection', (reason, promise) => {
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
   process.exit(1);
+});
+
+/* -------------------- API: LOOKUP PLACE ID -------------------- */
+
+app.get('/lookup-place-id', async (req, res) => {
+  const { name, city } = req.query;
+
+  if (!name) {
+    return res.status(400).json({ found: false, error: 'Station name is required' });
+  }
+
+  try {
+    const query = city ? `${name} CNG station ${city} India` : `${name} CNG station India`;
+    
+    const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${GOOGLE_API_KEY}`;
+    
+    const response = await axios.get(url);
+    const results = response.data.results;
+
+    if (results && results.length > 0) {
+      const place = results[0];
+      return res.json({
+        found: true,
+        place_id: place.place_id,
+        name: place.name,
+        address: place.formatted_address,
+        lat: place.geometry?.location?.lat,
+        lng: place.geometry?.location?.lng
+      });
+    } else {
+      return res.json({ found: false });
+    }
+
+  } catch (err) {
+    console.error('Place ID lookup error:', err.message);
+    res.status(500).json({ found: false, error: 'Lookup failed' });
+  }
 });

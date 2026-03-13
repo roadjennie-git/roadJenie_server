@@ -991,39 +991,54 @@
 
     /* -------------------- PLACE ID LOOKUP -------------------- */
 
-    async function lookupPlaceId() {
-      const name = document.getElementById('editName').value.trim();
-      const city = document.getElementById('editCity').value.trim();
+  async function lookupPlaceId() {
+  const name = document.getElementById('editName').value.trim();
+  const city = document.getElementById('editCity').value.trim();
 
-      if (!name) {
-        showToast('Enter a station name first', 'error');
-        return;
-      }
+  if (!name) {
+    showToast('Enter a station name first', 'error');
+    return;
+  }
 
-      const btn = document.getElementById('lookupBtn');
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Looking up...';
-      btn.disabled = true;
+  const btn = document.getElementById('lookupBtn');
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Looking up...';
+  btn.disabled = true;
 
-      try {
-        const res = await fetch(
-          `/lookup-place-id?name=${encodeURIComponent(name)}&city=${encodeURIComponent(city)}`
-        );
-        const data = await res.json();
+  try {
+    const res = await fetch(
+      `/lookup-place-id?name=${encodeURIComponent(name)}&city=${encodeURIComponent(city)}`
+    );
+    const data = await res.json();
 
-        if (data.found && data.place_id) {
-          document.getElementById('editPlaceId').value = data.place_id;
-          showToast('Place ID found!', 'success');
-        } else {
-          showToast('No match found — enter Place ID manually', 'error');
+    if (data.found && data.place_id) {
+      document.getElementById('editPlaceId').value = data.place_id;
+
+      // Auto-fill bonus fields if returned
+      if (data.lat && data.lng) {
+        document.getElementById('editLat').value = data.lat;
+        document.getElementById('editLng').value = data.lng;
+        if (map && marker) {
+          const loc = new google.maps.LatLng(data.lat, data.lng);
+          map.setCenter(loc);
+          map.setZoom(15);
+          marker.setPosition(loc);
         }
-      } catch (err) {
-        showToast('Lookup failed', 'error');
-      } finally {
-        btn.innerHTML = '<i class="fas fa-search"></i> Auto-fill';
-        btn.disabled = false;
       }
-    }
+      if (data.address && !document.getElementById('editAddress').value) {
+        document.getElementById('editAddress').value = data.address;
+      }
 
+      showToast('Place ID found!', 'success');
+    } else {
+      showToast('No match found — enter Place ID manually', 'error');
+    }
+  } catch (err) {
+    showToast('Lookup failed', 'error');
+  } finally {
+    btn.innerHTML = '<i class="fas fa-search"></i> Auto-fill';
+    btn.disabled = false;
+  }
+}
     /* -------------------- SAVE STATION -------------------- */
 
     async function saveStation() {
