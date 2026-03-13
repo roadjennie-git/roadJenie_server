@@ -25,12 +25,7 @@
       --radius-sm: 8px;
     }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -40,565 +35,331 @@
       min-height: 100vh;
     }
 
-    /* Header */
+    /* ── Header ── */
     .header {
       background: var(--surface);
       border-bottom: 1px solid var(--border);
       padding: 16px 20px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
+      position: sticky; top: 0; z-index: 100;
       box-shadow: var(--shadow-sm);
     }
-
     .header-content {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
+      max-width: 1200px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
     }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-weight: 700;
-      font-size: 1.25rem;
-    }
-
+    .logo { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 1.25rem; }
     .logo-icon {
-      width: 40px;
-      height: 40px;
+      width: 40px; height: 40px;
       background: linear-gradient(135deg, var(--primary), var(--primary-dark));
       border-radius: var(--radius);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 1.25rem;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 1.25rem;
     }
-
-    .search-container {
-      flex: 1;
-      max-width: 400px;
-    }
-
+    .search-container { flex: 1; max-width: 400px; }
     .search-wrapper {
-      position: relative;
-      display: flex;
-      align-items: center;
-      background: var(--bg);
-      border: 2px solid var(--border);
-      border-radius: var(--radius);
-      transition: all 0.2s ease;
+      position: relative; display: flex; align-items: center;
+      background: var(--bg); border: 2px solid var(--border);
+      border-radius: var(--radius); transition: all 0.2s ease;
     }
-
-    .search-wrapper:focus-within {
-      border-color: var(--primary);
-      background: var(--surface);
-      box-shadow: 0 0 0 3px var(--primary-light);
-    }
-
-    .search-icon {
-      padding: 0 16px;
-      color: var(--text-muted);
-    }
-
-    #cityInput {
-      flex: 1;
-      border: none;
-      background: transparent;
-      padding: 14px 0;
-      font-size: 1rem;
-      outline: none;
-      color: var(--text);
-    }
-
+    .search-wrapper:focus-within { border-color: var(--primary); background: var(--surface); box-shadow: 0 0 0 3px var(--primary-light); }
+    .search-icon { padding: 0 16px; color: var(--text-muted); }
+    #cityInput { flex: 1; border: none; background: transparent; padding: 14px 0; font-size: 1rem; outline: none; color: var(--text); }
     .load-btn {
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 12px 20px;
-      font-weight: 600;
-      cursor: pointer;
-      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-      transition: all 0.2s ease;
+      background: var(--primary); color: white; border: none;
+      padding: 12px 20px; font-weight: 600; cursor: pointer;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0; transition: all 0.2s ease;
     }
+    .load-btn:hover { background: var(--primary-dark); }
 
-    .load-btn:hover {
-      background: var(--primary-dark);
-    }
+    /* ── Main ── */
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 24px; }
+    .stat-card { background: var(--surface); padding: 16px; border-radius: var(--radius); box-shadow: var(--shadow-sm); text-align: center; }
+    .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
+    .stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
 
-    /* Main Container */
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    /* Stats */
-    .stats-bar {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 12px;
-      margin-bottom: 24px;
-    }
-
-    .stat-card {
-      background: var(--surface);
-      padding: 16px;
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-sm);
-      text-align: center;
-    }
-
-    .stat-value {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--primary);
-    }
-
-    .stat-label {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    /* Stations List */
-    .stations-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
+    /* ── Station List ── */
+    .stations-list { display: flex; flex-direction: column; gap: 12px; }
     .station-item {
-      background: var(--surface);
-      border-radius: var(--radius);
-      padding: 16px 20px;
-      box-shadow: var(--shadow-sm);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      transition: all 0.2s ease;
-      cursor: pointer;
+      background: var(--surface); border-radius: var(--radius); padding: 16px 20px;
+      box-shadow: var(--shadow-sm); display: flex; align-items: center;
+      justify-content: space-between; gap: 16px; transition: all 0.2s ease; cursor: pointer;
     }
-
-    .station-item:hover {
-      box-shadow: var(--shadow);
-      transform: translateY(-1px);
-    }
-
-    .station-info {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .station-name {
-      font-weight: 600;
-      font-size: 1rem;
-      margin-bottom: 4px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .station-meta {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 0.875rem;
-      color: var(--text-muted);
-    }
-
-    .station-meta span {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .rating-badge {
-      background: var(--primary-light);
-      color: var(--primary-dark);
-      padding: 4px 8px;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      font-weight: 600;
-    }
-
+    .station-item:hover { box-shadow: var(--shadow); transform: translateY(-1px); }
+    .station-info { flex: 1; min-width: 0; }
+    .station-name { font-weight: 600; font-size: 1rem; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .station-meta { display: flex; align-items: center; gap: 12px; font-size: 0.875rem; color: var(--text-muted); }
+    .station-meta span { display: flex; align-items: center; gap: 4px; }
+    .rating-badge { background: var(--primary-light); color: var(--primary-dark); padding: 4px 8px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
     .edit-btn {
-      background: var(--primary);
-      color: white;
-      border: none;
-      width: 40px;
-      height: 40px;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s ease;
-      flex-shrink: 0;
+      background: var(--primary); color: white; border: none;
+      width: 40px; height: 40px; border-radius: var(--radius-sm); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s ease; flex-shrink: 0;
     }
+    .edit-btn:hover { background: var(--primary-dark); transform: scale(1.05); }
 
-    .edit-btn:hover {
-      background: var(--primary-dark);
-      transform: scale(1.05);
-    }
-
-    /* Modal */
+    /* ── Modal Base ── */
     .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(4px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      z-index: 1000;
-      opacity: 0;
-      visibility: hidden;
-      transition: all 0.3s ease;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px; z-index: 1000;
+      opacity: 0; visibility: hidden; transition: all 0.3s ease;
     }
-
-    .modal-overlay.active {
-      opacity: 1;
-      visibility: visible;
-    }
-
+    .modal-overlay.active { opacity: 1; visibility: visible; }
     .modal {
-      background: var(--surface);
-      border-radius: var(--radius);
-      width: 100%;
-      max-width: 600px;
-      max-height: 90vh;
-      overflow: hidden;
+      background: var(--surface); border-radius: var(--radius);
+      width: 100%; max-width: 620px; max-height: 90vh; overflow: hidden;
       box-shadow: var(--shadow-lg);
-      transform: scale(0.9) translateY(20px);
-      transition: all 0.3s ease;
+      transform: scale(0.9) translateY(20px); transition: all 0.3s ease;
     }
-
-    .modal-overlay.active .modal {
-      transform: scale(1) translateY(0);
-    }
+    .modal-overlay.active .modal { transform: scale(1) translateY(0); }
 
     .modal-header {
       background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: white;
-      padding: 20px;
-      position: relative;
+      color: white; padding: 20px; position: relative;
     }
-
-    .modal-title {
-      font-size: 1.25rem;
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-
-    .modal-subtitle {
-      opacity: 0.9;
-      font-size: 0.875rem;
-    }
-
+    .modal-title { font-size: 1.25rem; font-weight: 600; margin-bottom: 4px; }
+    .modal-subtitle { opacity: 0.9; font-size: 0.875rem; }
     .modal-close {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      background: rgba(255, 255, 255, 0.2);
-      border: none;
-      color: white;
-      width: 36px;
-      height: 36px;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      position: absolute; top: 16px; right: 16px;
+      background: rgba(255,255,255,0.2); border: none; color: white;
+      width: 36px; height: 36px; border-radius: var(--radius-sm);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
       transition: all 0.2s ease;
     }
+    .modal-close:hover { background: rgba(255,255,255,0.3); }
 
-    .modal-close:hover {
-      background: rgba(255, 255, 255, 0.3);
+    /* ── Tab Switcher (only in Add modal) ── */
+    .tab-bar {
+      display: flex;
+      border-bottom: 2px solid var(--border);
+      background: var(--surface);
+      padding: 0 24px;
     }
-
-    .modal-body {
-      padding: 24px;
-      overflow-y: auto;
-      max-height: calc(90vh - 200px);
+    .tab-btn {
+      flex: 1; padding: 14px 16px; border: none; background: none;
+      cursor: pointer; font-size: 0.9rem; font-weight: 600;
+      color: var(--text-muted); border-bottom: 3px solid transparent;
+      margin-bottom: -2px; transition: all 0.2s ease;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
     }
+    .tab-btn:hover { color: var(--primary); }
+    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
 
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
 
-    .form-group {
+    /* ── Easy Upload Panel ── */
+    .easy-upload-panel {
+      padding: 28px 24px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 20px;
     }
 
-    .form-group.full-width {
-      grid-column: 1 / -1;
-    }
-
-    .form-label {
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .form-input {
-      padding: 12px 16px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      font-size: 0.9375rem;
-      transition: all 0.2s ease;
-      background: var(--bg);
-      width: 100%;
-    }
-
-    .form-input:focus {
-      outline: none;
-      border-color: var(--primary);
-      background: var(--surface);
-      box-shadow: 0 0 0 3px var(--primary-light);
-    }
-
-    .photo-section {
-      grid-column: 1 / -1;
-      margin-top: 8px;
-    }
-
-    .photo-preview {
-      width: 100%;
-      height: 200px;
-      object-fit: cover;
-      border-radius: var(--radius-sm);
-      margin-bottom: 12px;
-      background: var(--bg);
-    }
-
-    .file-input-wrapper {
+    .easy-search-box {
       position: relative;
-      overflow: hidden;
     }
-
-    .file-input-wrapper input[type=file] {
-      position: absolute;
-      left: -9999px;
+    .easy-search-box .search-icon-inner {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      color: var(--text-muted); font-size: 1rem; pointer-events: none;
     }
-
-    .file-label {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 12px;
-      background: var(--bg);
-      border: 2px dashed var(--border);
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      transition: all 0.2s ease;
-      color: var(--text-muted);
+    #easySearchInput {
+      width: 100%; padding: 14px 50px 14px 42px;
+      border: 2px solid var(--border); border-radius: var(--radius-sm);
+      font-size: 0.9375rem; outline: none; transition: all 0.2s;
+      background: var(--bg); color: var(--text);
     }
-
-    .file-label:hover {
-      border-color: var(--primary);
-      color: var(--primary);
+    #easySearchInput:focus { border-color: var(--primary); background: var(--surface); box-shadow: 0 0 0 3px var(--primary-light); }
+    .easy-search-clear {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; color: var(--text-muted); cursor: pointer;
+      font-size: 0.85rem; padding: 4px; display: none;
     }
+    .easy-search-clear.visible { display: block; }
 
-    .modal-footer {
-      padding: 20px 24px;
-      border-top: 1px solid var(--border);
-      display: flex;
-      gap: 12px;
-    }
-
-    .btn {
-      flex: 1;
-      padding: 12px 24px;
-      border: none;
-      border-radius: var(--radius-sm);
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      font-size: 0.9375rem;
-    }
-
-    .btn-primary {
-      background: var(--primary);
-      color: white;
-    }
-
-    .btn-primary:hover {
-      background: var(--primary-dark);
-    }
-
-    .btn-secondary {
-      background: var(--bg);
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
-
-    .btn-secondary:hover {
-      background: var(--border);
-    }
-
-    .btn-danger {
-      background: var(--danger);
-      color: white;
-    }
-
-    .btn-danger:hover {
-      background: #dc2626;
-    }
-
-    /* Loading & Empty States */
-    .loading {
-      text-align: center;
-      padding: 60px 20px;
+    /* Search results dropdown */
+    .easy-results {
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      overflow: hidden; box-shadow: var(--shadow);
+      max-height: 260px; overflow-y: auto;
       display: none;
     }
-
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid var(--border);
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 16px;
+    .easy-results.visible { display: block; }
+    .easy-result-item {
+      padding: 14px 16px; cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+      display: flex; align-items: flex-start; gap: 12px;
     }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
+    .easy-result-item:last-child { border-bottom: none; }
+    .easy-result-item:hover { background: var(--primary-light); }
+    .easy-result-icon {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--primary-light); color: var(--primary-dark);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem; flex-shrink: 0; margin-top: 2px;
     }
+    .easy-result-name { font-weight: 600; font-size: 0.9rem; color: var(--text); }
+    .easy-result-addr { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
 
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: var(--text-muted);
+    /* Searching spinner */
+    .easy-searching {
+      padding: 20px; text-align: center; color: var(--text-muted);
+      font-size: 0.875rem; display: none;
     }
+    .easy-searching.visible { display: block; }
 
-    .empty-icon {
-      font-size: 4rem;
-      margin-bottom: 16px;
-      opacity: 0.3;
-    }
-
-    /* Toast */
-    .toast {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%) translateY(100px);
-      background: var(--text);
-      color: white;
-      padding: 16px 24px;
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-lg);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      opacity: 0;
-      transition: all 0.3s ease;
-      z-index: 2000;
-    }
-
-    .toast.show {
-      transform: translateX(-50%) translateY(0);
-      opacity: 1;
-    }
-
-    .toast.success {
-      background: var(--primary);
-    }
-
-    .toast.error {
-      background: var(--danger);
-    }
-
-    /* Place ID lookup */
-    .place-id-wrapper {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .lookup-btn {
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 12px 14px;
+    /* Selected station card */
+    .easy-selected-card {
+      background: var(--primary-light);
+      border: 1.5px solid var(--primary);
       border-radius: var(--radius-sm);
-      cursor: pointer;
-      white-space: nowrap;
-      font-size: 0.875rem;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.2s ease;
-      flex-shrink: 0;
+      padding: 16px;
+      display: none;
+      animation: fadeIn 0.3s ease;
     }
+    .easy-selected-card.visible { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
+    .easy-selected-header {
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px;
+    }
+    .easy-selected-name { font-weight: 700; font-size: 1rem; color: var(--primary-dark); }
+    .easy-change-btn {
+      background: none; border: 1.5px solid var(--primary); color: var(--primary-dark);
+      padding: 4px 10px; border-radius: 20px; cursor: pointer;
+      font-size: 0.75rem; font-weight: 600; white-space: nowrap;
+      transition: all 0.2s; flex-shrink: 0;
+    }
+    .easy-change-btn:hover { background: var(--primary); color: white; }
+
+    .easy-detail-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    }
+    .easy-detail-item { display: flex; flex-direction: column; gap: 2px; }
+    .easy-detail-label { font-size: 0.68rem; font-weight: 600; color: var(--primary-dark); text-transform: uppercase; letter-spacing: 0.04em; }
+    .easy-detail-value { font-size: 0.82rem; color: var(--text); word-break: break-all; }
+
+    .easy-detail-item.full { grid-column: 1 / -1; }
+
+    .easy-photo-row {
+      margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(16,185,129,0.25);
+    }
+    .easy-photo-label { font-size: 0.68rem; font-weight: 600; color: var(--primary-dark); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; }
+    .easy-photo-options {
+      display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    }
+    .easy-photo-badge {
+      background: var(--primary); color: white;
+      padding: 4px 10px; border-radius: 20px;
+      font-size: 0.72rem; font-weight: 600;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .easy-photo-upload {
+      display: flex; align-items: center; gap: 6px;
+      padding: 5px 12px; border: 1.5px dashed var(--primary-dark);
+      border-radius: 20px; cursor: pointer; font-size: 0.75rem;
+      color: var(--primary-dark); font-weight: 600; transition: all 0.2s;
+    }
+    .easy-photo-upload:hover { background: var(--primary); color: white; border-color: var(--primary); }
+    .easy-photo-upload input { display: none; }
+
+    .easy-hint {
+      text-align: center; color: var(--text-muted); font-size: 0.82rem;
+      padding: 32px 16px;
+    }
+    .easy-hint i { font-size: 2.5rem; display: block; margin-bottom: 12px; opacity: 0.25; }
+
+    /* ── Shared Form Styles (manual tab) ── */
+    .modal-body { padding: 24px; overflow-y: auto; max-height: calc(90vh - 220px); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full-width { grid-column: 1 / -1; }
+    .form-label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .form-input {
+      padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+      font-size: 0.9375rem; transition: all 0.2s ease; background: var(--bg); width: 100%;
+    }
+    .form-input:focus { outline: none; border-color: var(--primary); background: var(--surface); box-shadow: 0 0 0 3px var(--primary-light); }
+
+    .photo-section { grid-column: 1 / -1; margin-top: 8px; }
+    .photo-preview { width: 100%; height: 200px; object-fit: cover; border-radius: var(--radius-sm); margin-bottom: 12px; background: var(--bg); }
+    .file-input-wrapper { position: relative; overflow: hidden; }
+    .file-input-wrapper input[type=file] { position: absolute; left: -9999px; }
+    .file-label {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 12px; background: var(--bg); border: 2px dashed var(--border);
+      border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s ease; color: var(--text-muted);
+    }
+    .file-label:hover { border-color: var(--primary); color: var(--primary); }
+
+    /* ── Footer ── */
+    .modal-footer {
+      padding: 16px 24px; border-top: 1px solid var(--border);
+      display: flex; gap: 12px;
+    }
+    .btn {
+      flex: 1; padding: 12px 24px; border: none; border-radius: var(--radius-sm);
+      font-weight: 600; cursor: pointer; transition: all 0.2s ease;
+      display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.9375rem;
+    }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: var(--border); }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover { background: #dc2626; }
+
+    /* ── Place ID lookup ── */
+    .place-id-wrapper { display: flex; gap: 8px; align-items: center; }
+    .lookup-btn {
+      background: var(--primary); color: white; border: none;
+      padding: 12px 14px; border-radius: var(--radius-sm); cursor: pointer;
+      white-space: nowrap; font-size: 0.875rem; font-weight: 600;
+      display: flex; align-items: center; gap: 6px; transition: all 0.2s ease; flex-shrink: 0;
+    }
     .lookup-btn:hover { background: var(--primary-dark); }
     .lookup-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .place-id-hint { font-size: 0.7rem; color: var(--text-muted); margin-top: 4px; font-style: italic; }
 
-    .place-id-hint {
-      font-size: 0.7rem;
-      color: var(--text-muted);
-      margin-top: 4px;
-      font-style: italic;
+    /* ── Loading/Empty ── */
+    .loading { text-align: center; padding: 60px 20px; display: none; }
+    .spinner {
+      width: 40px; height: 40px; border: 3px solid var(--border);
+      border-top-color: var(--primary); border-radius: 50%;
+      animation: spin 1s linear infinite; margin: 0 auto 16px;
     }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+    .empty-icon { font-size: 4rem; margin-bottom: 16px; opacity: 0.3; }
 
-    /* Responsive */
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 20px; left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--text); color: white; padding: 16px 24px;
+      border-radius: var(--radius); box-shadow: var(--shadow-lg);
+      display: flex; align-items: center; gap: 12px;
+      opacity: 0; transition: all 0.3s ease; z-index: 2000;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    .toast.success { background: var(--primary); }
+    .toast.error { background: var(--danger); }
+
+    /* ── Responsive ── */
     @media (max-width: 640px) {
-      .header-content {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .search-container {
-        max-width: none;
-      }
-
-      .form-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .modal {
-        max-height: 95vh;
-        margin: 10px;
-      }
-
-      .modal-body {
-        max-height: calc(95vh - 180px);
-      }
-
-      .place-id-wrapper {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .lookup-btn {
-        justify-content: center;
-      }
+      .header-content { flex-direction: column; align-items: stretch; }
+      .search-container { max-width: none; }
+      .form-grid { grid-template-columns: 1fr; }
+      .modal { max-height: 95vh; }
+      .modal-body { max-height: calc(95vh - 220px); }
+      .easy-detail-grid { grid-template-columns: 1fr; }
+      .place-id-wrapper { flex-direction: column; align-items: stretch; }
+      .lookup-btn { justify-content: center; }
     }
   </style>
 </head>
@@ -607,12 +368,9 @@
   <header class="header">
     <div class="header-content">
       <div class="logo">
-        <div class="logo-icon">
-          <i class="fas fa-gas-pump"></i>
-        </div>
+        <div class="logo-icon"><i class="fas fa-gas-pump"></i></div>
         <span>CNG Admin</span>
       </div>
-      
       <div class="search-container">
         <div class="search-wrapper">
           <i class="fas fa-search search-icon"></i>
@@ -622,11 +380,9 @@
           </button>
         </div>
       </div>
-
-      <button class="btn btn-primary" style="flex: none;" onclick="openAddModal()">
+      <button class="btn btn-primary" style="flex:none;" onclick="openAddModal()">
         <i class="fas fa-plus"></i> Add Station
       </button>
-
       <button class="btn btn-danger" onclick="handleLogout()" title="Logout">
         <i class="fas fa-sign-out-alt"></i> Logout
       </button>
@@ -648,86 +404,69 @@
         <div class="stat-label">City</div>
       </div>
     </div>
-
     <div class="loading" id="loadingState">
       <div class="spinner"></div>
       <p>Loading stations...</p>
     </div>
-
     <div class="empty-state" id="emptyState">
       <div class="empty-icon"><i class="fas fa-search-location"></i></div>
       <h3>Search for Stations</h3>
       <p>Enter a city name to view CNG stations</p>
     </div>
-
-    <div class="stations-list" id="stationsList" style="display: none;"></div>
+    <div class="stations-list" id="stationsList" style="display:none;"></div>
   </main>
 
-  <!-- Edit / Add Modal -->
+
+  <!-- ═══════════════════ EDIT MODAL (no tabs) ═══════════════════ -->
   <div class="modal-overlay" id="editModal">
     <div class="modal">
       <div class="modal-header">
-        <button class="modal-close" onclick="closeModal()">
-          <i class="fas fa-times"></i>
-        </button>
-        <div class="modal-title" id="modalTitle">Edit Station</div>
-        <div class="modal-subtitle" id="modalSubtitle">ID: <span id="modalStationId"></span></div>
+        <button class="modal-close" onclick="closeModal('editModal')"><i class="fas fa-times"></i></button>
+        <div class="modal-title" id="editModalTitle">Edit Station</div>
+        <div class="modal-subtitle">ID: <span id="editModalStationId"></span></div>
       </div>
-      
       <div class="modal-body">
         <form id="editForm" class="form-grid">
-
           <div class="form-group full-width">
             <label class="form-label">Station Name</label>
             <input type="text" class="form-input" id="editName" placeholder="Enter station name">
           </div>
-          
           <div class="form-group full-width">
             <label class="form-label">Address</label>
             <input type="text" class="form-input" id="editAddress" placeholder="Enter full address">
           </div>
-          
           <div class="form-group">
             <label class="form-label">City</label>
             <input type="text" class="form-input" id="editCity" placeholder="City">
           </div>
-          
           <div class="form-group">
             <label class="form-label">Pincode</label>
             <input type="text" class="form-input" id="editPincode" placeholder="Pincode">
           </div>
-          
           <div class="form-group">
             <label class="form-label">Latitude</label>
             <input type="number" step="0.000001" class="form-input" id="editLat" placeholder="Latitude">
           </div>
-          
           <div class="form-group">
             <label class="form-label">Longitude</label>
             <input type="number" step="0.000001" class="form-input" id="editLng" placeholder="Longitude">
           </div>
-
           <div class="form-group full-width">
             <label class="form-label">Search Location</label>
             <input type="text" id="mapSearchInput" class="form-input" placeholder="Search address or place...">
           </div>
-
           <div class="form-group full-width">
             <label class="form-label">Select Location on Map</label>
-            <div id="stationMap" style="height:300px; width:100%; border-radius:8px;"></div>
+            <div id="stationMap" style="height:300px;width:100%;border-radius:8px;"></div>
           </div>
-          
           <div class="form-group">
             <label class="form-label">Rating</label>
             <input type="number" step="0.1" min="0" max="5" class="form-input" id="editRating" placeholder="0.0 - 5.0">
           </div>
-          
           <div class="form-group">
             <label class="form-label">Total Reviews</label>
             <input type="number" class="form-input" id="editReviews" placeholder="Number of reviews">
           </div>
-
-          <!-- PLACE ID FIELD -->
           <div class="form-group full-width">
             <label class="form-label">Place ID</label>
             <div class="place-id-wrapper">
@@ -736,9 +475,8 @@
                 <i class="fas fa-search"></i> Auto-fill
               </button>
             </div>
-            <span class="place-id-hint">Enter station name + city above, then click Auto-fill to fetch automatically.</span>
+            <span class="place-id-hint">Enter station name + city above, then click Auto-fill.</span>
           </div>
-
           <div class="form-group photo-section">
             <label class="form-label">Station Photo</label>
             <img class="photo-preview" id="photoPreview" src="" alt="Station photo">
@@ -749,20 +487,202 @@
               </label>
             </div>
           </div>
-
         </form>
       </div>
-      
       <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeModal()">
-          <i class="fas fa-times"></i> Cancel
-        </button>
-        <button class="btn btn-primary" id="saveBtn" onclick="saveStation()">
-          <i class="fas fa-save"></i> Save Changes
-        </button>
+        <button class="btn btn-secondary" onclick="closeModal('editModal')"><i class="fas fa-times"></i> Cancel</button>
+        <button class="btn btn-primary" id="editSaveBtn" onclick="saveEditStation()"><i class="fas fa-save"></i> Save Changes</button>
       </div>
     </div>
   </div>
+
+
+  <!-- ═══════════════════ ADD MODAL (with tabs) ═══════════════════ -->
+  <div class="modal-overlay" id="addModal">
+    <div class="modal">
+      <div class="modal-header">
+        <button class="modal-close" onclick="closeModal('addModal')"><i class="fas fa-times"></i></button>
+        <div class="modal-title">Add New Station</div>
+        <div class="modal-subtitle">Choose how you want to add the station</div>
+      </div>
+
+      <!-- Tab bar -->
+      <div class="tab-bar">
+        <button class="tab-btn active" id="tabEasyBtn" onclick="switchTab('easy')">
+          <i class="fas fa-bolt"></i> Easy Upload
+        </button>
+        <button class="tab-btn" id="tabManualBtn" onclick="switchTab('manual')">
+          <i class="fas fa-pen"></i> Manual
+        </button>
+      </div>
+
+      <!-- ── Easy Upload Tab ── -->
+      <div class="tab-panel active" id="tabEasy">
+        <div class="easy-upload-panel">
+
+          <!-- Search box -->
+          <div class="easy-search-box">
+            <i class="fas fa-search search-icon-inner"></i>
+            <input type="text" id="easySearchInput" placeholder="Search CNG station name or address..." oninput="onEasySearch(this.value)">
+            <button class="easy-search-clear" id="easySearchClear" onclick="clearEasySearch()">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+
+          <!-- Searching indicator -->
+          <div class="easy-searching" id="easySearching">
+            <div class="spinner" style="margin:0 auto 8px;width:24px;height:24px;border-width:2px;"></div>
+            Searching Google Places...
+          </div>
+
+          <!-- Results list -->
+          <div class="easy-results" id="easyResults"></div>
+
+          <!-- Selected card -->
+          <div class="easy-selected-card" id="easySelectedCard">
+            <div class="easy-selected-header">
+              <div class="easy-selected-name" id="easySelName">—</div>
+              <button class="easy-change-btn" onclick="clearEasySelection()"><i class="fas fa-redo-alt"></i> Change</button>
+            </div>
+            <div class="easy-detail-grid">
+              <div class="easy-detail-item full">
+                <span class="easy-detail-label">Address</span>
+                <span class="easy-detail-value" id="easySelAddr">—</span>
+              </div>
+              <div class="easy-detail-item">
+                <span class="easy-detail-label">Latitude</span>
+                <span class="easy-detail-value" id="easySelLat">—</span>
+              </div>
+              <div class="easy-detail-item">
+                <span class="easy-detail-label">Longitude</span>
+                <span class="easy-detail-value" id="easySelLng">—</span>
+              </div>
+              <div class="easy-detail-item">
+                <span class="easy-detail-label">Rating</span>
+                <span class="easy-detail-value" id="easySelRating">—</span>
+              </div>
+              <div class="easy-detail-item">
+                <span class="easy-detail-label">Reviews</span>
+                <span class="easy-detail-value" id="easySelReviews">—</span>
+              </div>
+              <div class="easy-detail-item full">
+                <span class="easy-detail-label">Place ID</span>
+                <span class="easy-detail-value" id="easySelPlaceId">—</span>
+              </div>
+            </div>
+            <!-- Editable city/pincode -->
+            <div class="easy-detail-grid" style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(16,185,129,0.25);">
+              <div class="easy-detail-item">
+                <span class="easy-detail-label">City <span style="color:var(--danger);">*</span></span>
+                <input type="text" id="easyCityInput" class="form-input" placeholder="Enter city" style="padding:7px 10px;font-size:0.82rem;background:white;">
+              </div>
+              <div class="easy-detail-item">
+                <span class="easy-detail-label">Pincode</span>
+                <input type="text" id="easyPincodeInput" class="form-input" placeholder="Enter pincode" style="padding:7px 10px;font-size:0.82rem;background:white;">
+              </div>
+            </div>
+            <!-- Photo row -->
+            <div class="easy-photo-row">
+              <div class="easy-photo-label">Photo</div>
+              <div class="easy-photo-options">
+                <div class="easy-photo-badge" id="easyPhotoApiStatus" style="display:none;">
+                  <i class="fas fa-check"></i> From Google
+                </div>
+                <label class="easy-photo-upload">
+                  <i class="fas fa-upload"></i> Upload your own
+                  <input type="file" id="easyPhotoInput" accept="image/*" onchange="onEasyPhotoChange(this)">
+                </label>
+                <span id="easyPhotoFileName" style="font-size:0.75rem;color:var(--text-muted);"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hint when nothing selected -->
+          <div class="easy-hint" id="easyHint">
+            <i class="fas fa-satellite-dish"></i>
+            Search for a station above — name, address, or area.<br>
+            We'll pull all details automatically from Google.
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── Manual Tab ── -->
+      <div class="tab-panel" id="tabManual">
+        <div class="modal-body" style="max-height:calc(90vh - 230px);">
+          <form id="addForm" class="form-grid">
+            <div class="form-group full-width">
+              <label class="form-label">Station Name</label>
+              <input type="text" class="form-input" id="addName" placeholder="Enter station name">
+            </div>
+            <div class="form-group full-width">
+              <label class="form-label">Address</label>
+              <input type="text" class="form-input" id="addAddress" placeholder="Enter full address">
+            </div>
+            <div class="form-group">
+              <label class="form-label">City</label>
+              <input type="text" class="form-input" id="addCity" placeholder="City">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Pincode</label>
+              <input type="text" class="form-input" id="addPincode" placeholder="Pincode">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Latitude</label>
+              <input type="number" step="0.000001" class="form-input" id="addLat" placeholder="Latitude">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Longitude</label>
+              <input type="number" step="0.000001" class="form-input" id="addLng" placeholder="Longitude">
+            </div>
+            <div class="form-group full-width">
+              <label class="form-label">Search Location on Map</label>
+              <input type="text" id="addMapSearchInput" class="form-input" placeholder="Search address or place...">
+            </div>
+            <div class="form-group full-width">
+              <label class="form-label">Select Location on Map</label>
+              <div id="addStationMap" style="height:260px;width:100%;border-radius:8px;"></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Rating</label>
+              <input type="number" step="0.1" min="0" max="5" class="form-input" id="addRating" placeholder="0.0 - 5.0">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Total Reviews</label>
+              <input type="number" class="form-input" id="addReviews" placeholder="Number of reviews">
+            </div>
+            <div class="form-group full-width">
+              <label class="form-label">Place ID</label>
+              <div class="place-id-wrapper">
+                <input type="text" class="form-input" id="addPlaceId" placeholder="e.g. ChIJnTmQkIDzTDoRnQlpRnppzWU">
+                <button type="button" class="lookup-btn" id="addLookupBtn" onclick="lookupPlaceIdForAdd()">
+                  <i class="fas fa-search"></i> Auto-fill
+                </button>
+              </div>
+              <span class="place-id-hint">Enter station name + city above, then click Auto-fill.</span>
+            </div>
+            <div class="form-group photo-section">
+              <label class="form-label">Station Photo</label>
+              <img class="photo-preview" id="addPhotoPreview" src="https://via.placeholder.com/600x200?text=No+Image" alt="Station photo">
+              <div class="file-input-wrapper">
+                <input type="file" id="addPhotoInput" accept="image/*" onchange="previewAddPhoto(this)">
+                <label for="addPhotoInput" class="file-label">
+                  <i class="fas fa-camera"></i> <span id="addPhotoText">Upload Photo</span>
+                </label>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('addModal')"><i class="fas fa-times"></i> Cancel</button>
+        <button class="btn btn-primary" id="addSaveBtn" onclick="saveNewStation()"><i class="fas fa-plus"></i> Add Station</button>
+      </div>
+    </div>
+  </div>
+
 
   <!-- Toast -->
   <div class="toast" id="toast">
@@ -771,120 +691,86 @@
   </div>
 
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA9KChURa7uBrCmyLVBilt4jYHWKjKuUUI&libraries=places"></script>
-
   <script>
-    /* -------------------- SESSION -------------------- */
-
+    /* ═══════════════ SESSION ═══════════════ */
     async function checkAdminSession() {
       try {
-        const response = await fetch('/verify-token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include'
-        });
-        if (!response.ok) { window.location.href = '/login'; return false; }
-        const data = await response.json();
-        if (!data.valid) { window.location.href = '/login'; return false; }
+        const r = await fetch('/verify-token', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include' });
+        if (!r.ok) { window.location.href='/login'; return false; }
+        const d = await r.json();
+        if (!d.valid) { window.location.href='/login'; return false; }
         return true;
-      } catch (err) {
-        window.location.href = '/login';
-        return false;
-      }
+      } catch { window.location.href='/login'; return false; }
     }
-
     async function handleLogout() {
       if (!confirm('Are you sure you want to logout?')) return;
       try {
-        const response = await fetch('/admin-logout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include'
-        });
-        if (response.ok) {
-          localStorage.removeItem('adminToken');
-          window.location.href = '/login';
-        } else {
-          alert('Logout failed. Please try again.');
-        }
-      } catch (err) {
-        alert('Logout failed. Please try again.');
-      }
+        const r = await fetch('/admin-logout', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include' });
+        if (r.ok) { localStorage.removeItem('adminToken'); window.location.href='/login'; }
+        else alert('Logout failed. Please try again.');
+      } catch { alert('Logout failed. Please try again.'); }
     }
-
     window.addEventListener('load', checkAdminSession);
 
-    /* -------------------- STATE -------------------- */
-
+    /* ═══════════════ STATE ═══════════════ */
     let stationsData = [];
     let currentEditingId = null;
-    let isAddMode = false;
+    let activeTab = 'easy';
+    let easySelectedPlace = null; // holds the selected place data
 
-    /* -------------------- TOAST -------------------- */
-
+    /* ═══════════════ TOAST ═══════════════ */
     function showToast(message, type = 'success') {
       const toast = document.getElementById('toast');
-      const toastMessage = document.getElementById('toastMessage');
-      const icon = toast.querySelector('i');
       toast.className = `toast ${type}`;
-      toastMessage.textContent = message;
-      icon.className = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
+      document.getElementById('toastMessage').textContent = message;
+      toast.querySelector('i').className = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
       toast.classList.add('show');
       setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
-    /* -------------------- STATS -------------------- */
-
+    /* ═══════════════ STATS ═══════════════ */
     function updateStats() {
       document.getElementById('totalStations').textContent = stationsData.length;
       const avg = stationsData.length > 0
-        ? (stationsData.reduce((a, s) => a + (parseFloat(s.rating) || 0), 0) / stationsData.length).toFixed(1)
+        ? (stationsData.reduce((a,s) => a + (parseFloat(s.rating)||0), 0) / stationsData.length).toFixed(1)
         : '0.0';
       document.getElementById('avgRating').textContent = avg;
       const city = document.getElementById('cityInput').value.trim();
-      document.getElementById('currentCity').textContent = city
-        ? city.charAt(0).toUpperCase() + city.slice(1)
-        : '-';
+      document.getElementById('currentCity').textContent = city ? city.charAt(0).toUpperCase()+city.slice(1) : '-';
     }
 
-    /* -------------------- FETCH STATIONS -------------------- */
-
+    /* ═══════════════ FETCH STATIONS ═══════════════ */
     async function fetchStations() {
       const city = document.getElementById('cityInput').value.trim();
-      if (!city) { showToast('Please enter a city name', 'error'); return; }
-
+      if (!city) { showToast('Please enter a city name','error'); return; }
       document.getElementById('loadingState').style.display = 'block';
       document.getElementById('emptyState').style.display = 'none';
       document.getElementById('stationsList').style.display = 'none';
-
       try {
         const res = await fetch(`/stations-by-city?city=${encodeURIComponent(city)}`);
         const data = await res.json();
-        if (!data.success) throw new Error('Failed to fetch');
-
+        if (!data.success) throw new Error();
         stationsData = data.stations;
         updateStats();
-
         if (stationsData.length === 0) {
           document.getElementById('emptyState').innerHTML = `
             <div class="empty-icon"><i class="fas fa-inbox"></i></div>
             <h3>No Stations Found</h3>
-            <p>No CNG stations found in "${city}"</p>
-          `;
+            <p>No CNG stations found in "${city}"</p>`;
           document.getElementById('emptyState').style.display = 'block';
         } else {
           renderStationsList();
           document.getElementById('stationsList').style.display = 'flex';
         }
-      } catch (err) {
-        showToast('Error fetching stations', 'error');
+      } catch {
+        showToast('Error fetching stations','error');
         document.getElementById('emptyState').style.display = 'block';
       } finally {
         document.getElementById('loadingState').style.display = 'none';
       }
     }
 
-    /* -------------------- RENDER LIST -------------------- */
-
+    /* ═══════════════ RENDER LIST ═══════════════ */
     function renderStationsList() {
       const container = document.getElementById('stationsList');
       container.innerHTML = '';
@@ -893,155 +779,54 @@
         item.className = 'station-item';
         item.innerHTML = `
           <div class="station-info">
-            <div class="station-name">${station.name || 'Unnamed Station'}</div>
+            <div class="station-name">${station.name||'Unnamed Station'}</div>
             <div class="station-meta">
-              <span><i class="fas fa-map-marker-alt"></i> ${station.city || 'Unknown'}</span>
-              <span><i class="fas fa-star"></i> ${station.rating || '0.0'}</span>
-              <span class="rating-badge">${station.user_ratings_total || 0} reviews</span>
+              <span><i class="fas fa-map-marker-alt"></i> ${station.city||'Unknown'}</span>
+              <span><i class="fas fa-star"></i> ${station.rating||'0.0'}</span>
+              <span class="rating-badge">${station.user_ratings_total||0} reviews</span>
               ${station.place_id
-                ? `<span style="font-size:0.7rem; color:var(--primary);"><i class="fas fa-fingerprint"></i> ID saved</span>`
-                : `<span style="font-size:0.7rem; color:var(--danger);"><i class="fas fa-exclamation-circle"></i> No Place ID</span>`
-              }
+                ? `<span style="font-size:0.7rem;color:var(--primary);"><i class="fas fa-fingerprint"></i> ID saved</span>`
+                : `<span style="font-size:0.7rem;color:var(--danger);"><i class="fas fa-exclamation-circle"></i> No Place ID</span>`}
             </div>
           </div>
-          <button class="edit-btn" onclick="openEditModal('${station.id}')">
-            <i class="fas fa-pen"></i>
-          </button>
-        `;
+          <button class="edit-btn" onclick="openEditModal('${station.id}')"><i class="fas fa-pen"></i></button>`;
         container.appendChild(item);
       });
     }
 
-    /* -------------------- OPEN EDIT MODAL -------------------- */
+    /* ═══════════════ MODAL HELPERS ═══════════════ */
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+      document.body.style.overflow = '';
+      if (id === 'editModal') currentEditingId = null;
+    }
+    document.getElementById('editModal').addEventListener('click', function(e){ if(e.target===this) closeModal('editModal'); });
+    document.getElementById('addModal').addEventListener('click', function(e){ if(e.target===this) closeModal('addModal'); });
 
+    /* ═══════════════ EDIT MODAL ═══════════════ */
     function openEditModal(stationId) {
-      isAddMode = false;
-      document.getElementById('modalTitle').textContent = 'Edit Station';
       const station = stationsData.find(s => s.id === stationId);
       if (!station) return;
-
       currentEditingId = stationId;
-
-      document.getElementById('modalStationId').textContent = stationId;
-      document.getElementById('editName').value = station.name || '';
-      document.getElementById('editAddress').value = station.address || '';
-      document.getElementById('editCity').value = station.city || '';
-      document.getElementById('editPincode').value = station.pincode || '';
-      document.getElementById('editLat').value = station.latitude || '';
-      document.getElementById('editLng').value = station.longitude || '';
-      document.getElementById('editRating').value = station.rating || '';
-      document.getElementById('editReviews').value = station.user_ratings_total || '';
-      document.getElementById('editPlaceId').value = station.place_id || '';   // ← place_id
-
-      const photoPreview = document.getElementById('photoPreview');
-      photoPreview.src = station.photoUrl || 'https://via.placeholder.com/600x200?text=No+Image';
-
+      document.getElementById('editModalStationId').textContent = stationId;
+      document.getElementById('editName').value = station.name||'';
+      document.getElementById('editAddress').value = station.address||'';
+      document.getElementById('editCity').value = station.city||'';
+      document.getElementById('editPincode').value = station.pincode||'';
+      document.getElementById('editLat').value = station.latitude||'';
+      document.getElementById('editLng').value = station.longitude||'';
+      document.getElementById('editRating').value = station.rating||'';
+      document.getElementById('editReviews').value = station.user_ratings_total||'';
+      document.getElementById('editPlaceId').value = station.place_id||'';
+      document.getElementById('photoPreview').src = station.photoUrl||'https://via.placeholder.com/600x200?text=No+Image';
       document.getElementById('photoInput').value = '';
       document.getElementById('photoText').textContent = 'Change Photo';
-
       document.getElementById('editModal').classList.add('active');
       document.body.style.overflow = 'hidden';
-
       setTimeout(() => initStationMap(station.latitude, station.longitude), 300);
     }
 
-    /* -------------------- OPEN ADD MODAL -------------------- */
-
-    function openAddModal() {
-      isAddMode = true;
-      currentEditingId = null;
-
-      document.getElementById('modalTitle').textContent = 'Add New Station';
-      document.getElementById('modalStationId').textContent = 'New';
-
-      document.getElementById('editForm').reset();
-      document.getElementById('editPlaceId').value = '';
-      document.getElementById('photoPreview').src = 'https://via.placeholder.com/600x200?text=No+Image';
-
-      document.getElementById('editModal').classList.add('active');
-      document.body.style.overflow = 'hidden';
-
-      setTimeout(() => initStationMap(), 300);
-    }
-
-    /* -------------------- CLOSE MODAL -------------------- */
-
-    function closeModal() {
-      document.getElementById('editModal').classList.remove('active');
-      document.body.style.overflow = '';
-      currentEditingId = null;
-    }
-
-    document.getElementById('editModal').addEventListener('click', function (e) {
-      if (e.target === this) closeModal();
-    });
-
-    /* -------------------- PHOTO PREVIEW -------------------- */
-
-    function previewPhoto(input) {
-      if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-          document.getElementById('photoPreview').src = e.target.result;
-          document.getElementById('photoText').textContent = 'Photo selected';
-        };
-        reader.readAsDataURL(input.files[0]);
-      }
-    }
-
-    /* -------------------- PLACE ID LOOKUP -------------------- */
-
-  async function lookupPlaceId() {
-  const name = document.getElementById('editName').value.trim();
-  const city = document.getElementById('editCity').value.trim();
-
-  if (!name) {
-    showToast('Enter a station name first', 'error');
-    return;
-  }
-
-  const btn = document.getElementById('lookupBtn');
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Looking up...';
-  btn.disabled = true;
-
-  try {
-    const res = await fetch(
-      `/lookup-place-id?name=${encodeURIComponent(name)}&city=${encodeURIComponent(city)}`
-    );
-    const data = await res.json();
-
-    if (data.found && data.place_id) {
-      document.getElementById('editPlaceId').value = data.place_id;
-
-      // Auto-fill bonus fields if returned
-      if (data.lat && data.lng) {
-        document.getElementById('editLat').value = data.lat;
-        document.getElementById('editLng').value = data.lng;
-        if (map && marker) {
-          const loc = new google.maps.LatLng(data.lat, data.lng);
-          map.setCenter(loc);
-          map.setZoom(15);
-          marker.setPosition(loc);
-        }
-      }
-      if (data.address && !document.getElementById('editAddress').value) {
-        document.getElementById('editAddress').value = data.address;
-      }
-
-      showToast('Place ID found!', 'success');
-    } else {
-      showToast('No match found — enter Place ID manually', 'error');
-    }
-  } catch (err) {
-    showToast('Lookup failed', 'error');
-  } finally {
-    btn.innerHTML = '<i class="fas fa-search"></i> Auto-fill';
-    btn.disabled = false;
-  }
-}
-    /* -------------------- SAVE STATION -------------------- */
-
-    async function saveStation() {
+    async function saveEditStation() {
       const formData = new FormData();
       formData.append('name', document.getElementById('editName').value);
       formData.append('address', document.getElementById('editAddress').value);
@@ -1051,97 +836,395 @@
       formData.append('longitude', document.getElementById('editLng').value);
       formData.append('rating', document.getElementById('editRating').value);
       formData.append('user_ratings_total', document.getElementById('editReviews').value);
-      formData.append('place_id', document.getElementById('editPlaceId').value);  // ← place_id
-
+      formData.append('place_id', document.getElementById('editPlaceId').value);
       const photoInput = document.getElementById('photoInput');
       if (photoInput.files[0]) formData.append('photo', photoInput.files[0]);
 
-      const saveBtn = document.getElementById('saveBtn');
-      const originalText = saveBtn.innerHTML;
-      saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-      saveBtn.disabled = true;
+      const btn = document.getElementById('editSaveBtn');
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...'; btn.disabled = true;
+      try {
+        const res = await fetch(`/update-station-with-image/${currentEditingId}`, { method:'POST', body:formData });
+        const data = await res.json();
+        if (!data.success) throw new Error();
+        showToast('Station updated successfully!');
+        closeModal('editModal');
+        fetchStations();
+      } catch { showToast('Failed to save station','error'); }
+      finally { btn.innerHTML = '<i class="fas fa-save"></i> Save Changes'; btn.disabled = false; }
+    }
+
+    /* ═══════════════ ADD MODAL – TABS ═══════════════ */
+    function openAddModal() {
+      // Reset easy tab
+      clearEasySearch();
+      clearEasySelection();
+      document.getElementById('easySearchInput').value = '';
+      // Reset manual tab
+      document.getElementById('addForm').reset();
+      document.getElementById('addPlaceId').value = '';
+      document.getElementById('addPhotoPreview').src = 'https://via.placeholder.com/600x200?text=No+Image';
+      document.getElementById('addPhotoText').textContent = 'Upload Photo';
+      // Open on easy tab
+      switchTab('easy');
+      document.getElementById('addModal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function switchTab(tab) {
+      activeTab = tab;
+      document.getElementById('tabEasyBtn').classList.toggle('active', tab === 'easy');
+      document.getElementById('tabManualBtn').classList.toggle('active', tab === 'manual');
+      document.getElementById('tabEasy').classList.toggle('active', tab === 'easy');
+      document.getElementById('tabManual').classList.toggle('active', tab === 'manual');
+
+      if (tab === 'manual') {
+        setTimeout(() => initAddMap(), 300);
+      }
+    }
+
+    /* ═══════════════ EASY UPLOAD ═══════════════ */
+    let easySearchTimeout = null;
+
+    function onEasySearch(val) {
+      document.getElementById('easySearchClear').classList.toggle('visible', val.length > 0);
+      document.getElementById('easyResults').classList.remove('visible');
+      document.getElementById('easyResults').innerHTML = '';
+      clearTimeout(easySearchTimeout);
+      if (val.trim().length < 3) return;
+      document.getElementById('easySearching').classList.add('visible');
+      easySearchTimeout = setTimeout(() => doEasySearch(val.trim()), 600);
+    }
+
+    function doEasySearch(query) {
+      const service = new google.maps.places.PlacesService(document.createElement('div'));
+      service.textSearch(
+        { query: query + ' CNG station India' },
+        function(results, status) {
+          document.getElementById('easySearching').classList.remove('visible');
+          const container = document.getElementById('easyResults');
+          container.innerHTML = '';
+          if (status === google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
+            results.slice(0, 8).forEach(place => {
+              const item = document.createElement('div');
+              item.className = 'easy-result-item';
+              item.innerHTML = `
+                <div class="easy-result-icon"><i class="fas fa-gas-pump"></i></div>
+                <div>
+                  <div class="easy-result-name">${place.name}</div>
+                  <div class="easy-result-addr">${place.formatted_address||''}</div>
+                </div>`;
+              item.addEventListener('click', () => selectEasyPlace(place));
+              container.appendChild(item);
+            });
+            container.classList.add('visible');
+          } else {
+            container.innerHTML = `<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:0.85rem;"><i class="fas fa-search" style="margin-right:6px;"></i>No results found. Try a different search.</div>`;
+            container.classList.add('visible');
+          }
+        }
+      );
+    }
+
+    function selectEasyPlace(basicPlace) {
+      // Hide results, show loading state
+      document.getElementById('easyResults').classList.remove('visible');
+      document.getElementById('easyHint').style.display = 'none';
+      document.getElementById('easySearching').classList.add('visible');
+      document.getElementById('easySearching').innerHTML = `
+        <div class="spinner" style="margin:0 auto 8px;width:24px;height:24px;border-width:2px;"></div>
+        Fetching full details...`;
+
+      // Fetch full place details to get address_components
+      const service = new google.maps.places.PlacesService(document.createElement('div'));
+      service.getDetails(
+        {
+          placeId: basicPlace.place_id,
+          fields: ['name','formatted_address','geometry','rating','user_ratings_total','place_id','address_components','photos']
+        },
+        function(place, status) {
+          document.getElementById('easySearching').classList.remove('visible');
+          document.getElementById('easySearching').innerHTML = `
+            <div class="spinner" style="margin:0 auto 8px;width:24px;height:24px;border-width:2px;"></div>
+            Searching Google Places...`;
+
+          if (status !== google.maps.places.PlacesServiceStatus.OK || !place) {
+            // Fallback to basic place if details fail
+            place = basicPlace;
+          }
+
+          easySelectedPlace = place;
+
+          const lat = place.geometry?.location?.lat() || '';
+          const lng = place.geometry?.location?.lng() || '';
+
+          // Extract city and pincode from address_components
+          let city = '', pincode = '';
+          if (place.address_components) {
+            place.address_components.forEach(comp => {
+              if (comp.types.includes('locality')) city = comp.long_name;
+              if (comp.types.includes('postal_code')) pincode = comp.long_name;
+            });
+            // Fallback: administrative_area_level_2 if no locality
+            if (!city) {
+              place.address_components.forEach(comp => {
+                if (comp.types.includes('administrative_area_level_2')) city = comp.long_name;
+              });
+            }
+          }
+
+          // Store parsed city/pincode on the place object for use in saveNewStation
+          easySelectedPlace._city = city;
+          easySelectedPlace._pincode = pincode;
+
+          document.getElementById('easySelName').textContent = place.name || '—';
+          document.getElementById('easySelAddr').textContent = place.formatted_address || '—';
+          document.getElementById('easySelLat').textContent = lat ? lat.toFixed(6) : '—';
+          document.getElementById('easySelLng').textContent = lng ? lng.toFixed(6) : '—';
+          document.getElementById('easySelRating').textContent = place.rating ? `⭐ ${place.rating}` : '—';
+          document.getElementById('easySelReviews').textContent = place.user_ratings_total ? `${place.user_ratings_total}` : '—';
+          document.getElementById('easySelPlaceId').textContent = place.place_id || '—';
+
+          const hasPhoto = place.photos && place.photos.length > 0;
+          document.getElementById('easyPhotoApiStatus').style.display = hasPhoto ? 'flex' : 'none';
+
+          // Show city input pre-filled (editable fallback)
+          document.getElementById('easyCityInput').value = city;
+          document.getElementById('easyPincodeInput').value = pincode;
+
+          document.getElementById('easySelectedCard').classList.add('visible');
+        }
+      );
+    }
+
+    function clearEasySearch() {
+      document.getElementById('easySearchInput').value = '';
+      document.getElementById('easySearchClear').classList.remove('visible');
+      document.getElementById('easyResults').classList.remove('visible');
+      document.getElementById('easyResults').innerHTML = '';
+      document.getElementById('easySearching').classList.remove('visible');
+    }
+
+    function clearEasySelection() {
+      easySelectedPlace = null;
+      document.getElementById('easySelectedCard').classList.remove('visible');
+      document.getElementById('easyHint').style.display = 'block';
+      document.getElementById('easyPhotoFileName').textContent = '';
+      document.getElementById('easyPhotoInput').value = '';
+      document.getElementById('easyCityInput').value = '';
+      document.getElementById('easyPincodeInput').value = '';
+    }
+
+    function onEasyPhotoChange(input) {
+      if (input.files[0]) {
+        document.getElementById('easyPhotoFileName').textContent = input.files[0].name;
+      }
+    }
+
+    /* ═══════════════ SAVE NEW STATION ═══════════════ */
+    async function saveNewStation() {
+      const btn = document.getElementById('addSaveBtn');
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...'; btn.disabled = true;
 
       try {
-        const url = isAddMode ? '/add-station' : `/update-station-with-image/${currentEditingId}`;
-        const res = await fetch(url, { method: 'POST', body: formData });
+        const formData = new FormData();
+
+        if (activeTab === 'easy') {
+          if (!easySelectedPlace) { showToast('Search and select a station first','error'); btn.innerHTML='<i class="fas fa-plus"></i> Add Station'; btn.disabled=false; return; }
+
+          const p = easySelectedPlace;
+          const lat = p.geometry?.location?.lat() || 0;
+          const lng = p.geometry?.location?.lng() || 0;
+
+          // Use editable city/pincode inputs (auto-filled but user can correct)
+          const city = document.getElementById('easyCityInput').value.trim();
+          const pincode = document.getElementById('easyPincodeInput').value.trim();
+
+          if (!city) { showToast('Please enter the city name','error'); btn.innerHTML='<i class="fas fa-plus"></i> Add Station'; btn.disabled=false; return; }
+
+          formData.append('name', p.name || '');
+          formData.append('address', p.formatted_address || '');
+          formData.append('city', city);
+          formData.append('pincode', pincode);
+          formData.append('latitude', lat);
+          formData.append('longitude', lng);
+          formData.append('rating', p.rating || 0);
+          formData.append('user_ratings_total', p.user_ratings_total || 0);
+          formData.append('place_id', p.place_id || '');
+
+          // Photo: user upload takes priority, then Google photo URL via proxy
+          const easyPhoto = document.getElementById('easyPhotoInput');
+          if (easyPhoto.files[0]) {
+            formData.append('photo', easyPhoto.files[0]);
+          } else if (p.photos && p.photos.length > 0) {
+            // Get photo URL (100px→ 800px) and send as photoUrl field for server to use
+            const photoUrl = p.photos[0].getUrl({ maxWidth: 800 });
+            formData.append('photoUrl', photoUrl);
+          }
+
+        } else {
+          // Manual tab
+          formData.append('name', document.getElementById('addName').value);
+          formData.append('address', document.getElementById('addAddress').value);
+          formData.append('city', document.getElementById('addCity').value);
+          formData.append('pincode', document.getElementById('addPincode').value);
+          formData.append('latitude', document.getElementById('addLat').value);
+          formData.append('longitude', document.getElementById('addLng').value);
+          formData.append('rating', document.getElementById('addRating').value);
+          formData.append('user_ratings_total', document.getElementById('addReviews').value);
+          formData.append('place_id', document.getElementById('addPlaceId').value);
+          const addPhoto = document.getElementById('addPhotoInput');
+          if (addPhoto.files[0]) formData.append('photo', addPhoto.files[0]);
+        }
+
+        const res = await fetch('/add-station', { method:'POST', body:formData });
         const data = await res.json();
         if (!data.success) throw new Error();
 
-        showToast(isAddMode ? 'Station added successfully!' : 'Station updated successfully!');
-        closeModal();
+        showToast('Station added successfully!');
+        closeModal('addModal');
         fetchStations();
-      } catch (err) {
-        showToast('Failed to save station', 'error');
+      } catch {
+        showToast('Failed to add station','error');
       } finally {
-        saveBtn.innerHTML = originalText;
-        saveBtn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-plus"></i> Add Station'; btn.disabled = false;
       }
     }
 
-    /* -------------------- MAP -------------------- */
+    /* ═══════════════ PHOTO PREVIEWS ═══════════════ */
+    function previewPhoto(input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          document.getElementById('photoPreview').src = e.target.result;
+          document.getElementById('photoText').textContent = 'Photo selected';
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+    function previewAddPhoto(input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          document.getElementById('addPhotoPreview').src = e.target.result;
+          document.getElementById('addPhotoText').textContent = 'Photo selected';
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
 
-    let map;
-    let marker;
-    let autocomplete;
+    /* ═══════════════ PLACE ID LOOKUP (edit modal) ═══════════════ */
+    async function lookupPlaceId() {
+      const name = document.getElementById('editName').value.trim();
+      const city = document.getElementById('editCity').value.trim();
+      if (!name) { showToast('Enter a station name first','error'); return; }
+      const btn = document.getElementById('lookupBtn');
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Looking up...'; btn.disabled = true;
+      try {
+        const res = await fetch(`/lookup-place-id?name=${encodeURIComponent(name)}&city=${encodeURIComponent(city)}`);
+        const data = await res.json();
+        if (data.found && data.place_id) {
+          document.getElementById('editPlaceId').value = data.place_id;
+          if (data.lat && data.lng) {
+            document.getElementById('editLat').value = data.lat;
+            document.getElementById('editLng').value = data.lng;
+            if (map && marker) {
+              const loc = new google.maps.LatLng(data.lat, data.lng);
+              map.setCenter(loc); map.setZoom(15); marker.setPosition(loc);
+            }
+          }
+          if (data.address && !document.getElementById('editAddress').value)
+            document.getElementById('editAddress').value = data.address;
+          showToast('Place ID found!');
+        } else { showToast('No match found — enter Place ID manually','error'); }
+      } catch { showToast('Lookup failed','error'); }
+      finally { btn.innerHTML='<i class="fas fa-search"></i> Auto-fill'; btn.disabled=false; }
+    }
 
-    function initStationMap(lat = 20.5937, lng = 78.9629) {
-      const location = {
-        lat: parseFloat(lat) || 20.5937,
-        lng: parseFloat(lng) || 78.9629
-      };
+    /* PLACE ID LOOKUP (add manual tab) */
+    async function lookupPlaceIdForAdd() {
+      const name = document.getElementById('addName').value.trim();
+      const city = document.getElementById('addCity').value.trim();
+      if (!name) { showToast('Enter a station name first','error'); return; }
+      const btn = document.getElementById('addLookupBtn');
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Looking up...'; btn.disabled = true;
+      try {
+        const res = await fetch(`/lookup-place-id?name=${encodeURIComponent(name)}&city=${encodeURIComponent(city)}`);
+        const data = await res.json();
+        if (data.found && data.place_id) {
+          document.getElementById('addPlaceId').value = data.place_id;
+          if (data.lat && data.lng) {
+            document.getElementById('addLat').value = data.lat;
+            document.getElementById('addLng').value = data.lng;
+            if (addMap && addMarker) {
+              const loc = new google.maps.LatLng(data.lat, data.lng);
+              addMap.setCenter(loc); addMap.setZoom(15); addMarker.setPosition(loc);
+            }
+          }
+          if (data.address && !document.getElementById('addAddress').value)
+            document.getElementById('addAddress').value = data.address;
+          showToast('Place ID found!');
+        } else { showToast('No match found — enter Place ID manually','error'); }
+      } catch { showToast('Lookup failed','error'); }
+      finally { btn.innerHTML='<i class="fas fa-search"></i> Auto-fill'; btn.disabled=false; }
+    }
 
+    /* ═══════════════ MAPS ═══════════════ */
+    let map, marker, autocomplete;
+    let addMap, addMarker, addAutocomplete;
+
+    function initStationMap(lat=20.5937, lng=78.9629) {
+      const location = { lat: parseFloat(lat)||20.5937, lng: parseFloat(lng)||78.9629 };
       if (!map) {
-        map = new google.maps.Map(document.getElementById('stationMap'), {
-          zoom: 5,
-          center: location,
-        });
-
-        marker = new google.maps.Marker({
-          position: location,
-          map: map,
-          draggable: true
-        });
-
-        map.addListener('click', function (event) {
-          marker.setPosition(event.latLng);
-          updateLatLngInputs(event.latLng);
-        });
-
-        marker.addListener('dragend', function (event) {
-          updateLatLngInputs(event.latLng);
-        });
-
+        map = new google.maps.Map(document.getElementById('stationMap'), { zoom:5, center:location });
+        marker = new google.maps.Marker({ position:location, map, draggable:true });
+        map.addListener('click', e => { marker.setPosition(e.latLng); updateEditLatLng(e.latLng); });
+        marker.addListener('dragend', e => updateEditLatLng(e.latLng));
         const input = document.getElementById('mapSearchInput');
-        autocomplete = new google.maps.places.Autocomplete(input, {
-          componentRestrictions: { country: 'in' }
-        });
+        autocomplete = new google.maps.places.Autocomplete(input, { componentRestrictions:{country:'in'} });
         autocomplete.bindTo('bounds', map);
-        autocomplete.addListener('place_changed', function () {
+        autocomplete.addListener('place_changed', () => {
           const place = autocomplete.getPlace();
           if (!place.geometry) return;
-          const loc = place.geometry.location;
-          map.setCenter(loc);
-          map.setZoom(15);
-          marker.setPosition(loc);
-          updateLatLngInputs(loc);
+          map.setCenter(place.geometry.location); map.setZoom(15);
+          marker.setPosition(place.geometry.location);
+          updateEditLatLng(place.geometry.location);
         });
       }
-
-      map.setCenter(location);
-      marker.setPosition(location);
-      updateLatLngInputs(location);
+      map.setCenter(location); marker.setPosition(location); updateEditLatLng(location);
     }
-
-    function updateLatLngInputs(latLng) {
+    function updateEditLatLng(latLng) {
       document.getElementById('editLat').value = latLng.lat();
       document.getElementById('editLng').value = latLng.lng();
     }
 
-    /* -------------------- KEYBOARD -------------------- */
+    function initAddMap(lat=20.5937, lng=78.9629) {
+      const location = { lat: parseFloat(lat)||20.5937, lng: parseFloat(lng)||78.9629 };
+      if (!addMap) {
+        addMap = new google.maps.Map(document.getElementById('addStationMap'), { zoom:5, center:location });
+        addMarker = new google.maps.Marker({ position:location, map:addMap, draggable:true });
+        addMap.addListener('click', e => { addMarker.setPosition(e.latLng); updateAddLatLng(e.latLng); });
+        addMarker.addListener('dragend', e => updateAddLatLng(e.latLng));
+        const input = document.getElementById('addMapSearchInput');
+        addAutocomplete = new google.maps.places.Autocomplete(input, { componentRestrictions:{country:'in'} });
+        addAutocomplete.bindTo('bounds', addMap);
+        addAutocomplete.addListener('place_changed', () => {
+          const place = addAutocomplete.getPlace();
+          if (!place.geometry) return;
+          addMap.setCenter(place.geometry.location); addMap.setZoom(15);
+          addMarker.setPosition(place.geometry.location);
+          updateAddLatLng(place.geometry.location);
+        });
+      }
+      addMap.setCenter(location); addMarker.setPosition(location);
+    }
+    function updateAddLatLng(latLng) {
+      document.getElementById('addLat').value = latLng.lat();
+      document.getElementById('addLng').value = latLng.lng();
+    }
 
-    document.getElementById('cityInput').addEventListener('keypress', function (e) {
-      if (e.key === 'Enter') fetchStations();
-    });
+    /* ═══════════════ KEYBOARD ═══════════════ */
+    document.getElementById('cityInput').addEventListener('keypress', e => { if(e.key==='Enter') fetchStations(); });
+    document.getElementById('easySearchInput').addEventListener('keydown', e => { if(e.key==='Escape') clearEasySearch(); });
   </script>
 </body>
 </html>
