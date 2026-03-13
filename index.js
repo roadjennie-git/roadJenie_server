@@ -392,7 +392,7 @@ app.post('/update-station/:id', async (req, res) => {
       pincode: data.pincode,
       rating: Number(data.rating),
       user_ratings_total: Number(data.user_ratings_total),
-      place_id: data.place_id || '',   // ✅ included
+      place_id: data.place_id || '',
     });
 
     res.json({ success: true, message: 'Station updated successfully' });
@@ -415,7 +415,6 @@ app.post('/update-station-with-image/:id', upload.single('photo'), async (req, r
     const snapshot = await stationRef.once('value');
     if (!snapshot.exists()) return res.status(404).json({ success: false, error: 'Station not found' });
 
-    // Preserve existing photoUrl if no new file uploaded
     let photoUrl = snapshot.val().photoUrl || '';
 
     if (file) {
@@ -439,13 +438,45 @@ app.post('/update-station-with-image/:id', upload.single('photo'), async (req, r
       pincode: data.pincode,
       rating: Number(data.rating),
       user_ratings_total: Number(data.user_ratings_total),
-      place_id: data.place_id || '',   // ✅ fixed — was missing before
+      place_id: data.place_id || '',
       photoUrl
     });
 
     res.json({ success: true, message: 'Station updated successfully', photoUrl });
   } catch (err) {
     console.error('Error updating station with image:', err);
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
+  }
+});
+
+/* -------------------- API: DELETE STATION -------------------- */
+
+app.delete('/delete-station/:id', async (req, res) => {
+  const stationId = req.params.id;
+  if (!stationId) return res.status(400).json({ success: false, error: 'Station ID required' });
+
+  try {
+    const stationRef = db.ref(`CNG_Stations/${stationId}`);
+    const snapshot = await stationRef.once('value');
+    if (!snapshot.exists()) return res.status(404).json({ success: false, error: 'Station not found' });
+
+    // Delete photo from Firebase Storage if it exists
+    const photoUrl = snapshot.val().photoUrl || '';
+    if (photoUrl && photoUrl.includes('storage.googleapis.com')) {
+      try {
+        const bucket = getStorage().bucket();
+        const filePath = photoUrl.split(`${bucket.name}/`)[1];
+        if (filePath) await bucket.file(filePath).delete();
+      } catch (e) {
+        // Don't block deletion if photo removal fails
+        console.warn('Could not delete photo from storage:', e.message);
+      }
+    }
+
+    await stationRef.remove();
+    res.json({ success: true, message: 'Station deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting station:', err);
     res.status(500).json({ success: false, error: 'Internal Server Error' });
   }
 });
@@ -459,7 +490,7 @@ app.post("/add-station", upload.single("photo"), async (req, res) => {
     const newRef = db.ref("CNG_Stations").push();
     const stationId = newRef.key;
 
-    let photoUrl = req.body.photoUrl || ""; // Google photo URL fallback
+    let photoUrl = req.body.photoUrl || "";
 
     if (req.file) {
       const bucket = getStorage().bucket();
