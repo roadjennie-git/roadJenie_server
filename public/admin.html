@@ -663,7 +663,7 @@
             </div>
             <div class="form-group photo-section">
               <label class="form-label">Station Photo</label>
-              <img class="photo-preview" id="addPhotoPreview" src="https://via.placeholder.com/600x200?text=No+Image" alt="Station photo">
+              <img class="photo-preview" id="addPhotoPreview" src="https://placehold.co/600x200?text=No+Image" alt="Station photo">
               <div class="file-input-wrapper">
                 <input type="file" id="addPhotoInput" accept="image/*" onchange="previewAddPhoto(this)">
                 <label for="addPhotoInput" class="file-label">
@@ -690,7 +690,7 @@
     <span id="toastMessage">Success</span>
   </div>
 
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA9KChURa7uBrCmyLVBilt4jYHWKjKuUUI&libraries=places"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA9KChURa7uBrCmyLVBilt4jYHWKjKuUUI&libraries=places,marker&loading=async&solution_channel=GMP_QB_addressselection_v1"></script>
   <script>
     /* ═══════════════ SESSION ═══════════════ */
     async function checkAdminSession() {
@@ -818,7 +818,7 @@
       document.getElementById('editRating').value = station.rating||'';
       document.getElementById('editReviews').value = station.user_ratings_total||'';
       document.getElementById('editPlaceId').value = station.place_id||'';
-      document.getElementById('photoPreview').src = station.photoUrl||'https://via.placeholder.com/600x200?text=No+Image';
+      document.getElementById('photoPreview').src = station.photoUrl||'https://placehold.co/600x200?text=No+Image';
       document.getElementById('photoInput').value = '';
       document.getElementById('photoText').textContent = 'Change Photo';
       document.getElementById('editModal').classList.add('active');
@@ -862,7 +862,7 @@
       // Reset manual tab
       document.getElementById('addForm').reset();
       document.getElementById('addPlaceId').value = '';
-      document.getElementById('addPhotoPreview').src = 'https://via.placeholder.com/600x200?text=No+Image';
+      document.getElementById('addPhotoPreview').src = 'https://placehold.co/600x200?text=No+Image';
       document.getElementById('addPhotoText').textContent = 'Upload Photo';
       // Open on easy tab
       switchTab('easy');
@@ -1041,14 +1041,14 @@
 
           if (!city) { showToast('Please enter the city name','error'); btn.innerHTML='<i class="fas fa-plus"></i> Add Station'; btn.disabled=false; return; }
 
-          formData.append('name', p.name || '');
-          formData.append('address', p.formatted_address || '');
+          formData.append('name', p.displayName || '');
+          formData.append('address', p.formattedAddress || '');
           formData.append('city', city);
           formData.append('pincode', pincode);
           formData.append('latitude', lat);
           formData.append('longitude', lng);
           formData.append('rating', p.rating || 0);
-          formData.append('user_ratings_total', p.user_ratings_total || 0);
+          formData.append('user_ratings_total', p.userRatingCount || 0);
           formData.append('place_id', p.place_id || '');
 
           // Photo: user upload takes priority, then Google photo URL via proxy
