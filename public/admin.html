@@ -73,6 +73,85 @@
 
     /* ── Main ── */
     .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+    /* ── Total DB Banner ── */
+    .total-db-banner {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border-radius: var(--radius);
+      padding: 18px 24px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+    .total-db-banner::before {
+      content: '';
+      position: absolute;
+      right: -20px; top: -20px;
+      width: 120px; height: 120px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 50%;
+    }
+    .total-db-banner::after {
+      content: '';
+      position: absolute;
+      right: 40px; bottom: -30px;
+      width: 80px; height: 80px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 50%;
+    }
+    .total-db-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      z-index: 1;
+    }
+    .total-db-icon {
+      width: 48px; height: 48px;
+      background: rgba(255,255,255,0.15);
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+    .total-db-text {}
+    .total-db-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.75);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 2px;
+    }
+    .total-db-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: white;
+      line-height: 1;
+    }
+    .total-db-value.loading {
+      font-size: 1.4rem;
+      opacity: 0.6;
+    }
+    .total-db-right {
+      z-index: 1;
+      text-align: right;
+    }
+    .total-db-sub {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.7);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+    .total-db-sub i { font-size: 0.7rem; }
+
+    /* ── Stats Bar ── */
     .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 24px; }
     .stat-card { background: var(--surface); padding: 16px; border-radius: var(--radius); box-shadow: var(--shadow-sm); text-align: center; }
     .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
@@ -388,6 +467,9 @@
       .modal-footer { flex-wrap: wrap; }
       .modal-footer .btn { flex: 1 1 calc(50% - 6px); }
       .modal-footer .btn-danger { flex: 1 1 100%; order: 3; }
+      .total-db-banner { flex-direction: column; align-items: flex-start; gap: 8px; }
+      .total-db-right { text-align: left; }
+      .total-db-sub { justify-content: flex-start; }
     }
   </style>
 </head>
@@ -418,6 +500,24 @@
   </header>
 
   <main class="container">
+
+    <!-- Total DB Count Banner -->
+    <div class="total-db-banner">
+      <div class="total-db-left">
+        <div class="total-db-icon"><i class="fas fa-database"></i></div>
+        <div class="total-db-text">
+          <div class="total-db-label">Total Stations in Database</div>
+          <div class="total-db-value loading" id="totalDbCount">…</div>
+        </div>
+      </div>
+      <div class="total-db-right">
+        <div class="total-db-sub">
+          <i class="fas fa-circle" style="color: rgba(255,255,255,0.5); font-size: 0.5rem;"></i>
+          Live count across all cities
+        </div>
+      </div>
+    </div>
+
     <div class="stats-bar">
       <div class="stat-card">
         <div class="stat-value" id="totalStations">0</div>
@@ -432,6 +532,7 @@
         <div class="stat-label">City</div>
       </div>
     </div>
+
     <div class="loading" id="loadingState">
       <div class="spinner"></div>
       <p>Loading stations...</p>
@@ -517,7 +618,6 @@
           </div>
         </form>
       </div>
-      <!-- Footer with Delete button -->
       <div class="modal-footer">
         <button class="btn btn-danger" id="deleteStationBtn" onclick="confirmDeleteStation()" style="flex:0.6;">
           <i class="fas fa-trash"></i> Delete
@@ -542,7 +642,6 @@
         <div class="modal-subtitle">Choose how you want to add the station</div>
       </div>
 
-      <!-- Tab bar -->
       <div class="tab-bar">
         <button class="tab-btn active" id="tabEasyBtn" onclick="switchTab('easy')">
           <i class="fas fa-bolt"></i> Easy Upload
@@ -555,7 +654,6 @@
       <!-- Easy Upload Tab -->
       <div class="tab-panel active" id="tabEasy">
         <div class="easy-upload-panel">
-
           <div class="easy-search-box">
             <i class="fas fa-search search-icon-inner"></i>
             <input type="text" id="easySearchInput" placeholder="Search CNG station name or address..." oninput="onEasySearch(this.value)">
@@ -602,7 +700,6 @@
                 <span class="easy-detail-value" id="easySelPlaceId">—</span>
               </div>
             </div>
-            <!-- Editable city/pincode -->
             <div class="easy-detail-grid" style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(16,185,129,0.25);">
               <div class="easy-detail-item">
                 <span class="easy-detail-label">City <span style="color:var(--danger);">*</span></span>
@@ -613,7 +710,6 @@
                 <input type="text" id="easyPincodeInput" class="form-input" placeholder="Enter pincode" style="padding:7px 10px;font-size:0.82rem;background:white;">
               </div>
             </div>
-            <!-- Photo row -->
             <div class="easy-photo-row">
               <div class="easy-photo-label">Photo</div>
               <div class="easy-photo-options">
@@ -634,7 +730,6 @@
             Search for a station above — name, address, or area.<br>
             We'll pull all details automatically from Google.
           </div>
-
         </div>
       </div>
 
@@ -706,7 +801,6 @@
         </div>
       </div>
 
-      <!-- Footer -->
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeModal('addModal')"><i class="fas fa-times"></i> Cancel</button>
         <button class="btn btn-primary" id="addSaveBtn" onclick="saveNewStation()"><i class="fas fa-plus"></i> Add Station</button>
@@ -736,7 +830,6 @@
     </div>
   </div>
 
-
   <!-- Toast -->
   <div class="toast" id="toast">
     <i class="fas fa-check-circle"></i>
@@ -763,7 +856,31 @@
         else alert('Logout failed. Please try again.');
       } catch { alert('Logout failed. Please try again.'); }
     }
-    window.addEventListener('load', checkAdminSession);
+
+    window.addEventListener('load', async () => {
+      await checkAdminSession();
+      await refreshDbCount();
+    });
+
+    /* ═══════════════ DB COUNT ═══════════════ */
+    async function refreshDbCount() {
+      try {
+        const res = await fetch('/station-count');
+        const data = await res.json();
+        const el = document.getElementById('totalDbCount');
+        if (data.success) {
+          el.textContent = data.count.toLocaleString();
+          el.classList.remove('loading');
+        } else {
+          el.textContent = '—';
+          el.classList.remove('loading');
+        }
+      } catch {
+        const el = document.getElementById('totalDbCount');
+        el.textContent = '—';
+        el.classList.remove('loading');
+      }
+    }
 
     /* ═══════════════ STATE ═══════════════ */
     let stationsData = [];
@@ -922,7 +1039,6 @@
       const btn = document.getElementById('confirmDeleteBtn');
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
       btn.disabled = true;
-
       try {
         const res = await fetch(`/delete-station/${currentEditingId}`, { method: 'DELETE' });
         const data = await res.json();
@@ -931,6 +1047,7 @@
         closeModal('editModal');
         showToast('Station deleted successfully!');
         fetchStations();
+        refreshDbCount();
       } catch {
         showToast('Failed to delete station', 'error');
       } finally {
@@ -939,7 +1056,6 @@
       }
     }
 
-    // Close confirm dialog on overlay click
     document.getElementById('confirmOverlay').addEventListener('click', function(e) {
       if (e.target === this) closeConfirm();
     });
@@ -1122,7 +1238,6 @@
             btn.innerHTML='<i class="fas fa-plus"></i> Add Station'; btn.disabled=false; return;
           }
 
-          // ✅ Fixed: use correct property names from Places JS SDK
           formData.append('name', p.name || p.displayName || '');
           formData.append('address', p.formatted_address || p.formattedAddress || '');
           formData.append('city', city);
@@ -1142,7 +1257,6 @@
           }
 
         } else {
-          // Manual tab
           formData.append('name', document.getElementById('addName').value);
           formData.append('address', document.getElementById('addAddress').value);
           formData.append('city', document.getElementById('addCity').value);
@@ -1163,6 +1277,7 @@
         showToast('Station added successfully!');
         closeModal('addModal');
         fetchStations();
+        refreshDbCount();
       } catch {
         showToast('Failed to add station','error');
       } finally {

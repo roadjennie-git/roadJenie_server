@@ -19,7 +19,55 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(express.static("public"));
 
+/* -------------------- LOGGER -------------------- */
+
+const LOG_LEVELS = { DEBUG: 0, INFO: 1, WARN: 2, ERROR: 3 };
+const CURRENT_LEVEL = LOG_LEVELS[process.env.LOG_LEVEL?.toUpperCase()] ?? LOG_LEVELS.INFO;
+
+function log(level, category, message, meta = {}) {
+  if (LOG_LEVELS[level] < CURRENT_LEVEL) return;
+  const entry = {
+    timestamp: new Date().toISOString(),
+    level,
+    category,
+    message,
+    ...(Object.keys(meta).length > 0 && { meta }),
+  };
+  const output = JSON.stringify(entry);
+  if (level === 'ERROR' || level === 'WARN') {
+    console.error(output);
+  } else {
+    console.log(output);
+  }
+}
+
+const logger = {
+  debug: (cat, msg, meta) => log('DEBUG', cat, msg, meta),
+  info:  (cat, msg, meta) => log('INFO',  cat, msg, meta),
+  warn:  (cat, msg, meta) => log('WARN',  cat, msg, meta),
+  error: (cat, msg, meta) => log('ERROR', cat, msg, meta),
+};
+
+/* -------------------- REQUEST LOGGING MIDDLEWARE -------------------- */
+
+app.use((req, res, next) => {
+  const start = Date.now();
+  const { method, url, ip } = req;
+
+  logger.info('HTTP', `${method} ${url}`, { ip, userAgent: req.headers['user-agent'] });
+
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    const level = res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info';
+    logger[level]('HTTP', `${method} ${url} → ${res.statusCode}`, { ip, statusCode: res.statusCode, durationMs: duration });
+  });
+
+  next();
+});
+
 /* -------------------- FIREBASE SETUP -------------------- */
+
+logger.info('INIT', 'Setting up Firebase...');
 
 const serviceAccount = {
   type: 'service_account',
@@ -40,6 +88,9 @@ if (!admin.apps.length) {
     storageBucket: 'gs://road-jennie.firebasestorage.app',
     databaseURL: 'https://road-jennie-default-rtdb.firebaseio.com/'
   });
+  logger.info('INIT', 'Firebase initialized successfully', { projectId: process.env.FIREBASE_PROJECT_ID });
+} else {
+  logger.debug('INIT', 'Firebase already initialized — skipping');
 }
 
 const db = admin.database();
@@ -49,7 +100,12 @@ const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-env';
 const TOKEN_EXPIRY = 24 * 60 * 60 * 1000;
 
+if (!process.env.JWT_SECRET) {
+  logger.warn('AUTH', 'JWT_SECRET not set in environment — using insecure default');
+}
+
 function generateToken(adminId) {
+  logger.debug('AUTH', 'Generating token', { adminId });
   const payload = { adminId, iat: Date.now(), exp: Date.now() + TOKEN_EXPIRY };
   const payloadBase64 = Buffer.from(JSON.stringify(payload)).toString('base64');
   const signature = crypto.createHmac('sha256', JWT_SECRET).update(payloadBase64).digest('hex');
@@ -61,21 +117,34 @@ function verifyToken(token) {
     const decodedToken = decodeURIComponent(token);
     const [payloadStr, signature] = decodedToken.split('.');
     const expectedSignature = crypto.createHmac('sha256', JWT_SECRET).update(payloadStr).digest('hex');
-    if (signature !== expectedSignature) return null;
+    if (signature !== expectedSignature) {
+      logger.warn('AUTH', 'Token signature mismatch');
+      return null;
+    }
     const payload = JSON.parse(Buffer.from(payloadStr, 'base64').toString());
-    if (payload.exp < Date.now()) return null;
+    if (payload.exp < Date.now()) {
+      logger.warn('AUTH', 'Token expired', { adminId: payload.adminId, expiredAt: new Date(payload.exp).toISOString() });
+      return null;
+    }
     return payload;
   } catch (err) {
-    console.error('[VERIFY] Error:', err.message);
+    logger.error('AUTH', 'Token verification error', { error: err.message });
     return null;
   }
 }
 
 function verifyAdminToken(req, res, next) {
   const token = req.cookies?.adminToken || req.headers?.authorization?.replace('Bearer ', '') || req.headers?.['x-admin-token'];
-  if (!token) return res.redirect('/login');
+  if (!token) {
+    logger.warn('AUTH', 'Admin route accessed without token', { url: req.url, ip: req.ip });
+    return res.redirect('/login');
+  }
   const payload = verifyToken(token);
-  if (!payload) return res.redirect('/login');
+  if (!payload) {
+    logger.warn('AUTH', 'Admin route accessed with invalid/expired token', { url: req.url, ip: req.ip });
+    return res.redirect('/login');
+  }
+  logger.debug('AUTH', 'Admin token verified', { adminId: payload.adminId });
   req.adminId = payload.adminId;
   next();
 }
@@ -89,17 +158,25 @@ app.get("/admin", verifyAdminToken, (req, res) => res.sendFile(path.join(__dirna
 /* -------------------- AUTH -------------------- */
 
 app.post('/admin-login', async (req, res) => {
+  const { username, password } = req.body;
+  logger.info('AUTH', 'Login attempt', { username, ip: req.ip });
+
   try {
-    const { username, password } = req.body;
-    if (!username || !password)
+    if (!username || !password) {
+      logger.warn('AUTH', 'Login attempt with missing credentials', { ip: req.ip });
       return res.status(400).json({ success: false, message: 'Username and password required' });
+    }
 
     const adminDoc = await firestore.collection('admin_users').doc(username).get();
-    if (!adminDoc.exists)
+    if (!adminDoc.exists) {
+      logger.warn('AUTH', 'Login failed — user not found', { username, ip: req.ip });
       return res.status(401).json({ success: false, message: 'Invalid username or password' });
+    }
 
-    if (adminDoc.data().password !== password)
+    if (adminDoc.data().password !== password) {
+      logger.warn('AUTH', 'Login failed — wrong password', { username, ip: req.ip });
       return res.status(401).json({ success: false, message: 'Invalid username or password' });
+    }
 
     const token = generateToken(username);
     res.cookie('adminToken', token, {
@@ -109,22 +186,33 @@ app.post('/admin-login', async (req, res) => {
       maxAge: TOKEN_EXPIRY,
       path: '/'
     });
+
+    logger.info('AUTH', 'Login successful', { username, ip: req.ip });
     res.json({ success: true, message: 'Login successful', token });
   } catch (error) {
-    console.error('Login error:', error);
+    logger.error('AUTH', 'Login error', { username, error: error.message, stack: error.stack });
     res.status(500).json({ success: false, message: 'Login failed' });
   }
 });
 
 app.post('/verify-token', (req, res) => {
   const token = req.cookies?.adminToken || req.headers?.authorization?.replace('Bearer ', '') || req.headers?.['x-admin-token'];
-  if (!token) return res.status(401).json({ valid: false });
+  if (!token) {
+    logger.debug('AUTH', 'Token verification — no token provided');
+    return res.status(401).json({ valid: false });
+  }
   const payload = verifyToken(token);
-  if (!payload) return res.status(401).json({ valid: false });
+  if (!payload) {
+    logger.debug('AUTH', 'Token verification — invalid or expired');
+    return res.status(401).json({ valid: false });
+  }
+  logger.debug('AUTH', 'Token verified successfully', { adminId: payload.adminId });
   res.json({ valid: true, adminId: payload.adminId });
 });
 
 app.post('/admin-logout', (req, res) => {
+  const token = req.cookies?.adminToken;
+  logger.info('AUTH', 'Admin logout', { ip: req.ip });
   res.clearCookie('adminToken');
   res.json({ success: true, message: 'Logged out successfully' });
 });
@@ -142,16 +230,23 @@ function validateBody(body) {
 /* -------------------- API: NEAREST CNG -------------------- */
 
 app.post('/nearest-cng', async (req, res) => {
-  if (!validateBody(req.body))
+  if (!validateBody(req.body)) {
+    logger.warn('API', 'Invalid input for /nearest-cng', { body: req.body });
     return res.status(400).json({ error: 'Invalid input. Provide lat, lng (numbers) and page (number >= 1).' });
+  }
 
   const { lat, lng, page } = req.body;
   const RESULTS_PER_PAGE = 50;
 
+  logger.info('API', 'Fetching nearest CNG stations', { lat, lng, page });
+  const t0 = Date.now();
+
   try {
     const snapshot = await db.ref('CNG_Stations').once('value');
-    if (!snapshot.exists())
+    if (!snapshot.exists()) {
+      logger.info('API', 'No CNG stations found in database');
       return res.json({ stations: [], totalResults: 0, page, resultsPerPage: RESULTS_PER_PAGE, totalPages: 0 });
+    }
 
     const allDocs = [];
     snapshot.forEach(childSnapshot => {
@@ -160,20 +255,31 @@ app.post('/nearest-cng', async (req, res) => {
         allDocs.push({ id: childSnapshot.key, ...data });
     });
 
+    logger.debug('API', 'Loaded stations from DB', { totalStations: allDocs.length, durationMs: Date.now() - t0 });
+
     const withDistance = allDocs
       .map(doc => ({ ...doc, distance: geofire.distanceBetween([lat, lng], [doc.latitude, doc.longitude]) }))
       .sort((a, b) => a.distance - b.distance);
 
     const startIndex = (page - 1) * RESULTS_PER_PAGE;
+    const pageResults = withDistance.slice(startIndex, startIndex + RESULTS_PER_PAGE);
+
+    logger.info('API', 'Nearest CNG stations returned', {
+      lat, lng, page,
+      returned: pageResults.length,
+      total: withDistance.length,
+      durationMs: Date.now() - t0,
+    });
+
     res.json({
-      stations: withDistance.slice(startIndex, startIndex + RESULTS_PER_PAGE),
+      stations: pageResults,
       totalResults: withDistance.length,
       page: Math.min(page, Math.ceil(withDistance.length / RESULTS_PER_PAGE)),
       resultsPerPage: RESULTS_PER_PAGE,
       totalPages: Math.ceil(withDistance.length / RESULTS_PER_PAGE),
     });
   } catch (error) {
-    console.error('Error fetching nearest stations:', error);
+    logger.error('API', 'Error fetching nearest stations', { lat, lng, page, error: error.message, stack: error.stack });
     res.status(500).json({ error: 'Internal Server Error', details: error.message });
   }
 });
@@ -186,8 +292,12 @@ app.post('/stations-along-route', async (req, res) => {
   if (!source || !destination ||
     typeof source.lat !== 'number' || typeof source.lng !== 'number' ||
     typeof destination.lat !== 'number' || typeof destination.lng !== 'number') {
+    logger.warn('API', 'Invalid input for /stations-along-route', { source, destination });
     return res.status(400).json({ error: 'Invalid input.' });
   }
+
+  logger.info('API', 'Fetching stations along route', { source, destination });
+  const t0 = Date.now();
 
   const proximityKm = 5;
   const minDistanceFromSource = 5;
@@ -195,10 +305,14 @@ app.post('/stations-along-route', async (req, res) => {
 
   try {
     const directionsUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${source.lat},${source.lng}&destination=${destination.lat},${destination.lng}&key=${GOOGLE_API_KEY}`;
+    logger.debug('API', 'Requesting directions from Google Maps', { source, destination });
+
     const directionsResponse = await axios.get(directionsUrl);
     const route = directionsResponse.data.routes?.[0];
-    if (!route || !route.overview_polyline)
+    if (!route || !route.overview_polyline) {
+      logger.warn('API', 'No route found from Google Maps', { source, destination });
       return res.status(400).json({ error: 'No route found.' });
+    }
 
     const routePoints = decode(route.overview_polyline.points).map(point => {
       if (Array.isArray(point)) return { lat: point[0], lng: point[1] };
@@ -207,8 +321,13 @@ app.post('/stations-along-route', async (req, res) => {
       return null;
     }).filter(Boolean);
 
+    logger.debug('API', 'Route decoded', { routePointCount: routePoints.length });
+
     const snapshot = await db.ref('CNG_Stations').once('value');
-    if (!snapshot.exists()) return res.json({ stations: [] });
+    if (!snapshot.exists()) {
+      logger.info('API', 'No CNG stations in database for route query');
+      return res.json({ stations: [] });
+    }
 
     const allStations = [];
     snapshot.forEach(child => {
@@ -218,6 +337,8 @@ app.post('/stations-along-route', async (req, res) => {
       if (!isNaN(lat) && !isNaN(lng))
         allStations.push({ id: child.key, latitude: lat, longitude: lng, ...data });
     });
+
+    logger.debug('API', 'Loaded all stations for route filtering', { totalStations: allStations.length });
 
     const stationsAlongRoute = allStations.map(station => {
       const distanceFromSource = geolib.getDistance(
@@ -255,9 +376,16 @@ app.post('/stations-along-route', async (req, res) => {
       return null;
     }).filter(Boolean).sort((a, b) => a.closestRouteIndex - b.closestRouteIndex);
 
+    logger.info('API', 'Stations along route computed', {
+      source, destination,
+      totalStations: allStations.length,
+      matchedStations: stationsAlongRoute.length,
+      durationMs: Date.now() - t0,
+    });
+
     res.json({ stations: stationsAlongRoute });
   } catch (error) {
-    console.error('Route stations error:', error.message);
+    logger.error('API', 'Route stations error', { source, destination, error: error.message, stack: error.stack });
     res.status(500).json({ error: 'Internal Server Error', details: error.message });
   }
 });
@@ -265,6 +393,9 @@ app.post('/stations-along-route', async (req, res) => {
 /* -------------------- CRON / NEWS -------------------- */
 
 async function fetchAndStoreCarNews() {
+  logger.info('CRON', 'Starting car news fetch...');
+  const t0 = Date.now();
+
   try {
     const { data } = await axios.get("https://gnews.io/api/v4/search", {
       params: {
@@ -287,30 +418,37 @@ async function fetchAndStoreCarNews() {
         createdAt: admin.firestore.FieldValue.serverTimestamp()
       }));
 
+    logger.debug('CRON', 'News articles fetched from GNews', { total: data.articles.length, filtered: news.length });
+
     const batch = firestore.batch();
     const newsCollection = firestore.collection("car_news");
     const oldDocs = await newsCollection.get();
     oldDocs.forEach(doc => batch.delete(doc.ref));
     news.forEach(item => batch.set(newsCollection.doc(), item));
     await batch.commit();
-    console.log(`Saved ${news.length} news articles`);
+
+    logger.info('CRON', 'Car news updated successfully', { articlesStored: news.length, durationMs: Date.now() - t0 });
   } catch (error) {
-    console.error("News cron error:", error.message);
+    logger.error('CRON', 'News cron failed', { error: error.message, stack: error.stack });
   }
 }
 
 app.get("/api/cron-news", async (req, res) => {
+  logger.info('CRON', 'Manual cron trigger via /api/cron-news', { ip: req.ip });
   await fetchAndStoreCarNews();
   res.json({ success: true });
 });
 
 app.get("/car-travel-news", async (req, res) => {
+  logger.info('API', 'Fetching car news from Firestore');
   try {
     const snapshot = await firestore.collection("car_news").orderBy("createdAt", "desc").limit(40).get();
     const news = [];
     snapshot.forEach(doc => news.push(doc.data()));
+    logger.info('API', 'Car news returned', { count: news.length });
     res.json({ success: true, count: news.length, news });
   } catch (err) {
+    logger.error('API', 'Error fetching car news', { error: err.message, stack: err.stack });
     res.status(500).json({ success: false, message: err.message, news: [] });
   }
 });
@@ -319,12 +457,20 @@ app.get("/car-travel-news", async (req, res) => {
 
 app.get('/stations-by-city', async (req, res) => {
   const city = req.query.city;
-  if (!city || typeof city !== 'string')
+  if (!city || typeof city !== 'string') {
+    logger.warn('API', 'Invalid city param for /stations-by-city', { city });
     return res.status(400).json({ success: false, error: 'Provide a valid city name' });
+  }
+
+  logger.info('API', 'Fetching stations by city', { city });
+  const t0 = Date.now();
 
   try {
     const snapshot = await db.ref('CNG_Stations').once('value');
-    if (!snapshot.exists()) return res.json({ success: true, count: 0, stations: [] });
+    if (!snapshot.exists()) {
+      logger.info('API', 'No stations in DB for city query', { city });
+      return res.json({ success: true, count: 0, stations: [] });
+    }
 
     const stations = [];
     snapshot.forEach(child => {
@@ -333,9 +479,10 @@ app.get('/stations-by-city', async (req, res) => {
         stations.push({ id: child.key, ...data });
     });
 
+    logger.info('API', 'Stations by city returned', { city, count: stations.length, durationMs: Date.now() - t0 });
     res.json({ success: true, count: stations.length, stations });
   } catch (err) {
-    console.error('Error fetching by city:', err.message);
+    logger.error('API', 'Error fetching stations by city', { city, error: err.message, stack: err.stack });
     res.status(500).json({ success: false, error: 'Internal Server Error' });
   }
 });
@@ -344,8 +491,12 @@ app.get('/stations-by-city', async (req, res) => {
 
 app.get('/lookup-place-id', async (req, res) => {
   const { name, city } = req.query;
-  if (!name)
+  if (!name) {
+    logger.warn('API', 'Missing name param for /lookup-place-id');
     return res.status(400).json({ found: false, error: 'Station name is required' });
+  }
+
+  logger.info('API', 'Looking up place ID', { name, city });
 
   try {
     const query = city ? `${name} CNG station ${city} India` : `${name} CNG station India`;
@@ -355,6 +506,7 @@ app.get('/lookup-place-id', async (req, res) => {
 
     if (results && results.length > 0) {
       const place = results[0];
+      logger.info('API', 'Place ID found', { name, city, placeId: place.place_id });
       return res.json({
         found: true,
         place_id: place.place_id,
@@ -364,9 +516,11 @@ app.get('/lookup-place-id', async (req, res) => {
         lng: place.geometry?.location?.lng
       });
     }
+
+    logger.info('API', 'No place ID found', { name, city });
     return res.json({ found: false });
   } catch (err) {
-    console.error('Place ID lookup error:', err.message);
+    logger.error('API', 'Place ID lookup error', { name, city, error: err.message, stack: err.stack });
     res.status(500).json({ found: false, error: 'Lookup failed' });
   }
 });
@@ -376,12 +530,20 @@ app.get('/lookup-place-id', async (req, res) => {
 app.post('/update-station/:id', async (req, res) => {
   const stationId = req.params.id;
   const data = req.body;
-  if (!stationId) return res.status(400).json({ success: false, error: 'Station ID is required' });
+  if (!stationId) {
+    logger.warn('API', 'Missing station ID for /update-station');
+    return res.status(400).json({ success: false, error: 'Station ID is required' });
+  }
+
+  logger.info('API', 'Updating station', { stationId, fields: Object.keys(data) });
 
   try {
     const stationRef = db.ref(`CNG_Stations/${stationId}`);
     const snapshot = await stationRef.once('value');
-    if (!snapshot.exists()) return res.status(404).json({ success: false, error: 'Station not found' });
+    if (!snapshot.exists()) {
+      logger.warn('API', 'Station not found for update', { stationId });
+      return res.status(404).json({ success: false, error: 'Station not found' });
+    }
 
     await stationRef.update({
       name: data.name,
@@ -395,9 +557,10 @@ app.post('/update-station/:id', async (req, res) => {
       place_id: data.place_id || '',
     });
 
+    logger.info('API', 'Station updated successfully', { stationId });
     res.json({ success: true, message: 'Station updated successfully' });
   } catch (err) {
-    console.error('Error updating station:', err.message);
+    logger.error('API', 'Error updating station', { stationId, error: err.message, stack: err.stack });
     res.status(500).json({ success: false, error: 'Internal Server Error' });
   }
 });
@@ -408,12 +571,20 @@ app.post('/update-station-with-image/:id', upload.single('photo'), async (req, r
   const stationId = req.params.id;
   const data = req.body;
   const file = req.file;
-  if (!stationId) return res.status(400).json({ success: false, error: 'Station ID required' });
+  if (!stationId) {
+    logger.warn('API', 'Missing station ID for /update-station-with-image');
+    return res.status(400).json({ success: false, error: 'Station ID required' });
+  }
+
+  logger.info('API', 'Updating station with image', { stationId, hasFile: !!file, fileSize: file?.size });
 
   try {
     const stationRef = db.ref(`CNG_Stations/${stationId}`);
     const snapshot = await stationRef.once('value');
-    if (!snapshot.exists()) return res.status(404).json({ success: false, error: 'Station not found' });
+    if (!snapshot.exists()) {
+      logger.warn('API', 'Station not found for image update', { stationId });
+      return res.status(404).json({ success: false, error: 'Station not found' });
+    }
 
     let photoUrl = snapshot.val().photoUrl || '';
 
@@ -427,6 +598,7 @@ app.post('/update-station-with-image/:id', upload.single('photo'), async (req, r
         metadata: { firebaseStorageDownloadTokens: stationId }
       });
       photoUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+      logger.info('API', 'Photo uploaded to storage', { stationId, fileName, photoUrl });
     }
 
     await stationRef.update({
@@ -442,9 +614,10 @@ app.post('/update-station-with-image/:id', upload.single('photo'), async (req, r
       photoUrl
     });
 
+    logger.info('API', 'Station updated with image successfully', { stationId, photoUrl });
     res.json({ success: true, message: 'Station updated successfully', photoUrl });
   } catch (err) {
-    console.error('Error updating station with image:', err);
+    logger.error('API', 'Error updating station with image', { stationId, error: err.message, stack: err.stack });
     res.status(500).json({ success: false, error: 'Internal Server Error' });
   }
 });
@@ -453,30 +626,40 @@ app.post('/update-station-with-image/:id', upload.single('photo'), async (req, r
 
 app.delete('/delete-station/:id', async (req, res) => {
   const stationId = req.params.id;
-  if (!stationId) return res.status(400).json({ success: false, error: 'Station ID required' });
+  if (!stationId) {
+    logger.warn('API', 'Missing station ID for /delete-station');
+    return res.status(400).json({ success: false, error: 'Station ID required' });
+  }
+
+  logger.info('API', 'Deleting station', { stationId });
 
   try {
     const stationRef = db.ref(`CNG_Stations/${stationId}`);
     const snapshot = await stationRef.once('value');
-    if (!snapshot.exists()) return res.status(404).json({ success: false, error: 'Station not found' });
+    if (!snapshot.exists()) {
+      logger.warn('API', 'Station not found for deletion', { stationId });
+      return res.status(404).json({ success: false, error: 'Station not found' });
+    }
 
-    // Delete photo from Firebase Storage if it exists
     const photoUrl = snapshot.val().photoUrl || '';
     if (photoUrl && photoUrl.includes('storage.googleapis.com')) {
       try {
         const bucket = getStorage().bucket();
         const filePath = photoUrl.split(`${bucket.name}/`)[1];
-        if (filePath) await bucket.file(filePath).delete();
+        if (filePath) {
+          await bucket.file(filePath).delete();
+          logger.info('API', 'Station photo deleted from storage', { stationId, filePath });
+        }
       } catch (e) {
-        // Don't block deletion if photo removal fails
-        console.warn('Could not delete photo from storage:', e.message);
+        logger.warn('API', 'Could not delete photo from storage (non-fatal)', { stationId, error: e.message });
       }
     }
 
     await stationRef.remove();
+    logger.info('API', 'Station deleted successfully', { stationId });
     res.json({ success: true, message: 'Station deleted successfully' });
   } catch (err) {
-    console.error('Error deleting station:', err);
+    logger.error('API', 'Error deleting station', { stationId, error: err.message, stack: err.stack });
     res.status(500).json({ success: false, error: 'Internal Server Error' });
   }
 });
@@ -484,9 +667,10 @@ app.delete('/delete-station/:id', async (req, res) => {
 /* -------------------- API: ADD STATION -------------------- */
 
 app.post("/add-station", upload.single("photo"), async (req, res) => {
-  try {
-    const { name, address, city, pincode, latitude, longitude, rating, place_id, user_ratings_total } = req.body;
+  const { name, address, city, pincode, latitude, longitude, rating, place_id, user_ratings_total } = req.body;
+  logger.info('API', 'Adding new station', { name, city, lat: latitude, lng: longitude, hasPhoto: !!req.file });
 
+  try {
     const newRef = db.ref("CNG_Stations").push();
     const stationId = newRef.key;
 
@@ -498,6 +682,7 @@ app.post("/add-station", upload.single("photo"), async (req, res) => {
       const fileRef = bucket.file(fileName);
       await fileRef.save(req.file.buffer, { contentType: req.file.mimetype, public: true });
       photoUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+      logger.info('API', 'New station photo uploaded', { stationId, fileName });
     }
 
     await newRef.set({
@@ -514,18 +699,45 @@ app.post("/add-station", upload.single("photo"), async (req, res) => {
       place_id: place_id || ""
     });
 
+    logger.info('API', 'New station added successfully', { stationId, name, city });
     res.json({ success: true, id: stationId });
   } catch (err) {
-    console.error("ADD STATION ERROR:", err);
+    logger.error('API', 'Error adding station', { name, city, error: err.message, stack: err.stack });
     res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/* -------------------- API: STATION COUNT -------------------- */
+
+app.get('/station-count', async (req, res) => {
+  try {
+    const snapshot = await db.ref('CNG_Stations').once('value');
+    const count = snapshot.exists() ? snapshot.numChildren() : 0;
+    logger.info('API', 'Station count returned', { count });
+    res.json({ success: true, count });
+  } catch (err) {
+    logger.error('API', 'Error fetching station count', { error: err.message });
+    res.status(500).json({ success: false, count: 0 });
   }
 });
 
 /* -------------------- START SERVER -------------------- */
 
 const PORT = process.env.PORT || 3000;
-const server = app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+const server = app.listen(PORT, () => {
+  logger.info('SERVER', `Server started`, { port: PORT, env: process.env.NODE_ENV || 'development' });
+});
 
-server.on('error', (err) => { console.error('Server error:', err); process.exit(1); });
-process.on('unhandledRejection', (reason, promise) => console.error('Unhandled Rejection:', reason));
-process.on('uncaughtException', (err) => { console.error('Uncaught Exception:', err); process.exit(1); });
+server.on('error', (err) => {
+  logger.error('SERVER', 'Server error', { error: err.message, code: err.code });
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('PROCESS', 'Unhandled promise rejection', { reason: String(reason) });
+});
+
+process.on('uncaughtException', (err) => {
+  logger.error('PROCESS', 'Uncaught exception — shutting down', { error: err.message, stack: err.stack });
+  process.exit(1);
+});
